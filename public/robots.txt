@@ -1,0 +1,8 @@
+# Public marketing pages are crawlable; app dashboards are not.
+User-agent: *
+Allow: /
+
+Disallow: /student/
+Disallow: /advisor/
+Disallow: /pending
+Sitemap: /sitemap.xml
