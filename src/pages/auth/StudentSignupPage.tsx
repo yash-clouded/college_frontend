@@ -823,14 +823,9 @@ export default function StudentSignupPage() {
             />
             <span>
               I accept the{" "}
-              <a
-                href="/terms-and-conditions.pdf"
-                target="_blank"
-                rel="noreferrer"
-                className="text-neon-teal hover:underline"
-              >
+              <Link to="/terms" className="text-neon-teal hover:underline">
                 Terms
-              </a>
+              </Link>
               {", "}
               <Link to="/about" className="text-neon-teal hover:underline">
                 About

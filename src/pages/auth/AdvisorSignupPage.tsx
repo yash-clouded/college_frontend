@@ -1288,14 +1288,9 @@ export default function AdvisorSignupPage() {
               />
               <span>
                 I accept the{" "}
-                <a
-                  href="/terms-and-conditions.pdf"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-neon-orange hover:underline"
-                >
+                <Link to="/terms" className="text-neon-orange hover:underline">
                   Terms
-                </a>
+                </Link>
                 {", "}
                 <Link to="/about" className="text-neon-orange hover:underline">
                   About
