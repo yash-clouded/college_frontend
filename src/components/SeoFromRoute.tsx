@@ -24,7 +24,7 @@ export function SeoFromRoute() {
         ? `${base}/`
         : `${base}${pathname}`
       : undefined;
-  const ogImage = base ? `${base}/favicon-transparent.png` : undefined;
+  const ogImage = base ? `${base}/favicon-512.png?v=3` : undefined;
   const isHome = pathname === "/";
 
   const structuredData =
