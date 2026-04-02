@@ -21,6 +21,19 @@ declare global {
 
 const MainShell = lazy(() => import("./MainShell"));
 
+function initAnalyticsDeferred() {
+  const startAnalytics = () => {
+    void getFirebaseAnalytics();
+  };
+
+  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+    window.requestIdleCallback(startAnalytics, { timeout: 2000 });
+    return;
+  }
+
+  setTimeout(startAnalytics, 800);
+}
+
 function LoadingShell() {
   return (
     <div
@@ -59,7 +72,7 @@ if (!isFirebaseConfigured()) {
   ReactDOM.createRoot(rootEl).render(<DeployConfigMissing />);
 } else {
   getFirebaseApp();
-  void getFirebaseAnalytics();
+  initAnalyticsDeferred();
 
   ReactDOM.createRoot(rootEl).render(
     <RootErrorBoundary>

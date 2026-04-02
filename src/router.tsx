@@ -6,25 +6,26 @@
   createRouter,
   useRouterState,
 } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { lazy, type ReactNode } from "react";
 import App from "./App";
-import HomePage from "./pages/home/HomePage";
-import AdvisorLoginPage from "./pages/auth/AdvisorLoginPage";
-import AdvisorSignupPage from "./pages/auth/AdvisorSignupPage";
-import StudentLoginPage from "./pages/auth/StudentLoginPage";
-import StudentSignupPage from "./pages/auth/StudentSignupPage";
-import TestAccountPage from "./pages/auth/TestAccountPage";
-import AboutPage from "./pages/footer/AboutPage";
-import ContactPage from "./pages/footer/ContactPage";
-import PrivacyPage from "./pages/footer/PrivacyPage";
-import TermsPage from "./pages/footer/TermsPage";
-import GetStartedPage from "./pages/home/GetStartedPage";
-import StudentDashboard from "./pages/dashboard/StudentDashboard";
-import StudentAdvisorDetailPage from "./pages/dashboard/StudentAdvisorDetailPage";
-import StudentSessionDetailPage from "./pages/dashboard/StudentSessionDetailPage";
-import PendingApproval from "./pages/PendingApproval";
-import AdvisorDashboard from "./pages/dashboard/AdvisorDashboard";
-import AdvisorSessionDetailPage from "./pages/dashboard/AdvisorSessionDetailPage";
+
+const HomePage = lazy(() => import("./pages/home/HomePage"));
+const AdvisorLoginPage = lazy(() => import("./pages/auth/AdvisorLoginPage"));
+const AdvisorSignupPage = lazy(() => import("./pages/auth/AdvisorSignupPage"));
+const StudentLoginPage = lazy(() => import("./pages/auth/StudentLoginPage"));
+const StudentSignupPage = lazy(() => import("./pages/auth/StudentSignupPage"));
+const TestAccountPage = lazy(() => import("./pages/auth/TestAccountPage"));
+const AboutPage = lazy(() => import("./pages/footer/AboutPage"));
+const ContactPage = lazy(() => import("./pages/footer/ContactPage"));
+const PrivacyPage = lazy(() => import("./pages/footer/PrivacyPage"));
+const TermsPage = lazy(() => import("./pages/footer/TermsPage"));
+const GetStartedPage = lazy(() => import("./pages/home/GetStartedPage"));
+const StudentDashboard = lazy(() => import("./pages/dashboard/StudentDashboard"));
+const StudentAdvisorDetailPage = lazy(() => import("./pages/dashboard/StudentAdvisorDetailPage"));
+const StudentSessionDetailPage = lazy(() => import("./pages/dashboard/StudentSessionDetailPage"));
+const PendingApproval = lazy(() => import("./pages/PendingApproval"));
+const AdvisorDashboard = lazy(() => import("./pages/dashboard/AdvisorDashboard"));
+const AdvisorSessionDetailPage = lazy(() => import("./pages/dashboard/AdvisorSessionDetailPage"));
 
 const rootRoute = createRootRoute({
   component: () => (

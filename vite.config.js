@@ -25,6 +25,18 @@ export default defineConfig({
     sourcemap: false,
     // Smaller, reliable production bundles on Vercel (unminified multi-MB output can cause edge cases).
     minify: "esbuild",
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("firebase")) return "vendor-firebase";
+          if (id.includes("@tanstack")) return "vendor-router";
+          if (id.includes("motion") || id.includes("framer-motion")) return "vendor-motion";
+          if (id.includes("@dfinity")) return "vendor-dfinity";
+          return "vendor";
+        },
+      },
+    },
   },
   css: {
     postcss: "./postcss.config.js",
