@@ -98,17 +98,25 @@ export default function Navbar() {
           </div>
         ) : null}
 
-        {/* Mobile toggle */}
+        {/* Mobile actions */}
         {showTopNav ? (
-          <button
-            type="button"
-            className="md:hidden text-foreground p-2"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            data-ocid="nav.toggle"
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          <div className="md:hidden flex items-center gap-2">
+            <Link
+              to="/get-started"
+              className="inline-flex items-center justify-center bg-neon-orange hover:bg-neon-orange/80 text-black font-semibold rounded-lg px-3 py-1.5 text-xs glow-orange transition-all duration-300"
+            >
+              Get Started
+            </Link>
+            <button
+              type="button"
+              className="text-foreground p-2"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              data-ocid="nav.toggle"
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
         ) : null}
       </div>
 
