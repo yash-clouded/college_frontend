@@ -140,20 +140,19 @@ const EMAIL_TO_COLLEGE: Record<string, string> = {
   "iiitkalyani.ac.in": "IIIT Kalyani",
   "iiitt.ac.in": "IIIT Tiruchirappalli",
   "iiitr.ac.in": "IIIT Raichur",
-  "iiitagartala.ac.in": "IIIT Agartala"
-  
+  "iiitagartala.ac.in": "IIIT Agartala",
+
   //IISERS
-  
+
   "iiserkol.ac.in": "IISER Kolkata",
   "iiserpune.ac.in": "IISER Pune",
   "iiserb.ac.in": "IISER Bhopal",
   "iisermohali.ac.in": "IISER Mohali",
   "iisertvm.ac.in": "IISER Thiruvananthapuram",
   "iisertirupati.ac.in": "IISER Tirupati",
-  "iiserberhampur.ac.in": "IISER Berhampur"
+  "iiserberhampur.ac.in": "IISER Berhampur",
 
-
-  "bits-pilani.ac.in": "BITS Pilani",//bits
+  "bits-pilani.ac.in": "BITS Pilani", // bits
 
   "dtu.ac.in": "DTU Delhi",
 
@@ -225,6 +224,22 @@ const EMAIL_TO_COLLEGE: Record<string, string> = {
   "mdi.ac.in": "MDI Gurgaon",
   "greatlakes.edu.in": "Great Lakes Institute of Management",
   "spjimr.org": "SPJIMR Mumbai",
+
+  // -------- Top State Colleges --------
+"coep.org.in": "COEP Pune",
+"vjti.ac.in": "VJTI Mumbai",
+"jadavpuruniversity.in": "Jadavpur University",
+"annauniv.edu": "Anna University",
+"osmania.ac.in": "Osmania University",
+"msrit.edu": "MS Ramaiah Institute of Technology",
+"rvce.edu.in": "RV College of Engineering",
+"pes.edu": "PES University",
+"bmsce.ac.in": "BMS College of Engineering",
+"krea.edu.in": "Krea University",
+
+// Engineering-focused / others (avoid duplicate domain keys above)
+"shivajicollege.ac.in": "Shivaji College",
+"jainuniversity.ac.in": "Jain University",
 };
 
 const HOURLY_TIME_OPTIONS = Array.from({ length: 24 }, (_, hour) => {
