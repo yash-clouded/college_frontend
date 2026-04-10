@@ -1,4 +1,4 @@
-﻿import {
+import {
   Outlet,
   RouterProvider,
   createRootRoute,
@@ -23,7 +23,7 @@ const GetStartedPage = lazy(() => import("./pages/home/GetStartedPage"));
 const StudentDashboard = lazy(() => import("./pages/dashboard/StudentDashboard"));
 const StudentAdvisorDetailPage = lazy(() => import("./pages/dashboard/StudentAdvisorDetailPage"));
 const StudentSessionDetailPage = lazy(() => import("./pages/dashboard/StudentSessionDetailPage"));
-const PendingApproval = lazy(() => import("./pages/PendingApproval"));
+
 const AdvisorDashboard = lazy(() => import("./pages/dashboard/AdvisorDashboard"));
 const AdvisorSessionDetailPage = lazy(() => import("./pages/dashboard/AdvisorSessionDetailPage"));
 
@@ -46,7 +46,7 @@ const contactRoute = createRoute({ getParentRoute: () => rootRoute, path: "/cont
 const privacyRoute = createRoute({ getParentRoute: () => rootRoute, path: "/privacy", component: PrivacyPage });
 const termsRoute = createRoute({ getParentRoute: () => rootRoute, path: "/terms", component: TermsPage });
 const getStartedRoute = createRoute({ getParentRoute: () => rootRoute, path: "/get-started", component: GetStartedPage });
-const pendingRoute = createRoute({ getParentRoute: () => rootRoute, path: "/pending", component: PendingApproval });
+
 const studentDashboardRoute = createRoute({ getParentRoute: () => rootRoute, path: "/student/dashboard", component: StudentDashboard });
 const studentAdvisorDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -76,7 +76,7 @@ const routeTree = rootRoute.addChildren([
   privacyRoute,
   termsRoute,
   getStartedRoute,
-  pendingRoute,
+
   studentDashboardRoute,
   studentAdvisorDetailRoute,
   studentSessionDetailRoute,

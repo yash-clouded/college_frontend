@@ -1,11 +1,10 @@
 /**
- * Temporary gate: when true, students are sent to `/pending` after sign-in / completed sign-up
- * instead of the dashboard. Set to `true` later to re-enable the pending page.
+ * Gate: students are sent directly to the dashboard.
  */
-export const isUnderReview = true;
+export const isUnderReview = false;
 
-export type StudentPostAuthPath = "/pending" | "/student/dashboard";
+export type StudentPostAuthPath = "/student/dashboard";
 
 export function studentPostAuthPath(): StudentPostAuthPath {
-  return isUnderReview ? "/pending" : "/student/dashboard";
+  return "/student/dashboard";
 }
