@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
 import { OTHER_LANGUAGE_LABEL } from "@/constants/signupLanguages";
 import { getFirebaseAuth } from "@/lib/firebase";
+import { extractAdvisorFieldsFromIdCard } from "@/lib/idCardOcr";
 import {
   formatFirebaseAuthError,
 } from "@/lib/firebaseAuthErrors";
@@ -14,7 +15,7 @@ import {
   registerAdvisor,
   requestSignupOtp,
   uploadCollegeIdPairToS3,
-  uploadProfilePictureToS3,
+  uploadCollegeIdPairToS3Temp,
   verifySignupOtp,
 } from "@/lib/restApi";
 import { FirebaseError } from "firebase/app";
@@ -26,8 +27,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { CheckCircle, Loader, Mail, Upload, UserPlus, X } from "lucide-react";
-import { type ChangeEvent, useEffect, useReducer, useRef, useState } from "react";
+import { CheckCircle, Loader, Mail, UserPlus } from "lucide-react";
+import { type ChangeEvent, useEffect, useReducer, useState } from "react";
 import { AuthShell } from "./AuthShell";
 
 const INDIAN_STATES = [
@@ -61,11 +62,12 @@ const INDIAN_STATES = [
   "West Bengal",
   "Delhi",
   "Jammu & Kashmir",
-  "Ladakh",
 ];
 
 const EMAIL_TO_COLLEGE: Record<string, string> = {
-  "rgipt.ac.in": "RGIPT",
+
+  // IITs
+  "rgipt.ac.in": "RAJIV GANDHI INSTITUTE OF PETROLEUM TECHNOLOGY(RGIPT)",
   "iitd.ac.in": "IIT Delhi",
   "iitb.ac.in": "IIT Bombay",
   "iitm.ac.in": "IIT Madras",
@@ -89,6 +91,8 @@ const EMAIL_TO_COLLEGE: Record<string, string> = {
   "iitgoa.ac.in": "IIT Goa",
   "iitjammu.ac.in": "IIT Jammu",
   "iitdh.ac.in": "IIT Dharwad",
+
+  //NITS
   "nitt.edu": "NIT Trichy",
   "nitk.ac.in": "NIT Surathkal",
   "nitw.ac.in": "NIT Warangal",
@@ -108,34 +112,77 @@ const EMAIL_TO_COLLEGE: Record<string, string> = {
   "nits.ac.in": "NIT Silchar",
   "nith.ac.in": "NIT Hamirpur",
   "nita.ac.in": "NIT Agartala",
-  "iiita.ac.in": "IIIT Allahabad",
-  "iiitm.ac.in": "IIITM Gwalior",
-  "iiit.ac.in": "IIIT Hyderabad",
+
+  //IITS
+  "iiith.ac.in": "IIIT Hyderabad",
   "iiitb.ac.in": "IIIT Bangalore",
   "iiitd.ac.in": "IIIT Delhi",
-  "bits-pilani.ac.in": "BITS Pilani",
-  "dtu.ac.in": "DTU Delhi",
-  "nsut.ac.in": "NSUT Delhi", // -------- TOP PRIVATE COLLEGES (INDIA) --------
+  "iiita.ac.in": "IIIT Allahabad",
+  "iiitm.ac.in": "IIITM Gwalior",
+  "iiitdmj.ac.in": "IIITDM Jabalpur",
+  "iiitdm.ac.in": "IIITDM Kancheepuram",
+  "iiitk.ac.in": "IIIT Kurnool",
+  "iiits.ac.in": "IIIT Sri City",
+  "iiitvadodara.ac.in": "IIIT Vadodara",
+  "iiitn.ac.in": "IIIT Nagpur",
+  "iiitl.ac.in": "IIIT Lucknow",
+  "iiitdwd.ac.in": "IIIT Dharwad",
+  "iiitpune.ac.in": "IIIT Pune",
+  "iiitbh.ac.in": "IIIT Bhagalpur",
+  "iiitbhopal.ac.in": "IIIT Bhopal",
+  "iiitsurat.ac.in": "IIIT Surat",
+  "iiitu.ac.in": "IIIT Una",
+  "iiitkottayam.ac.in": "IIIT Kottayam",
+  "iiitranchi.ac.in": "IIIT Ranchi",
+  "iiitkota.ac.in": "IIIT Kota",
+  "iiitg.ac.in": "IIIT Guwahati",
+  "iiitsonepat.ac.in": "IIIT Sonepat",
+  "iiitmanipur.ac.in": "IIIT Manipur",
+  "iiitkalyani.ac.in": "IIIT Kalyani",
+  "iiitt.ac.in": "IIIT Tiruchirappalli",
+  "iiitr.ac.in": "IIIT Raichur",
+  "iiitagartala.ac.in": "IIIT Agartala",
 
+  //IISERS
+
+  "iiserkol.ac.in": "IISER Kolkata",
+  "iiserpune.ac.in": "IISER Pune",
+  "iiserb.ac.in": "IISER Bhopal",
+  "iisermohali.ac.in": "IISER Mohali",
+  "iisertvm.ac.in": "IISER Thiruvananthapuram",
+  "iisertirupati.ac.in": "IISER Tirupati",
+  "iiserberhampur.ac.in": "IISER Berhampur",
+
+  "bits-pilani.ac.in": "BITS Pilani", // bits
+
+  "dtu.ac.in": "DTU Delhi",
+
+  "nsut.ac.in": "NSUT Delhi", // -------- TOP PRIVATE COLLEGES (INDIA) --------
+  
   "vit.ac.in": "VIT Vellore",
+
   "vitstudent.ac.in": "VIT Vellore",
 
   "srmist.edu.in": "SRM Institute of Science and Technology",
+
   "srm.edu.in": "SRM University",
 
   "amity.edu": "Amity University",
 
   "manipal.edu": "Manipal Institute of Technology",
+
   "learner.manipal.edu": "Manipal University",
 
-  "shivnadaredu.com": "Shiv Nadar University",
+  "shivnadaredu.com": "Shiv Nadar University"
+  ,
   "snu.edu.in": "Shiv Nadar University",
 
   "ashoka.edu.in": "Ashoka University",
 
   "flame.edu.in": "FLAME University",
 
-  "opju.ac.in": "OP Jindal Global University",
+  "opju.ac.in": "OP Jindal Global University"
+  ,
   "jgu.edu.in": "Jindal Global University",
 
   "nmims.edu": "NMIMS Mumbai",
@@ -143,6 +190,7 @@ const EMAIL_TO_COLLEGE: Record<string, string> = {
   "christuniversity.in": "Christ University",
 
   "symbiosis.ac.in": "Symbiosis International University",
+
   "siu.edu.in": "Symbiosis University",
 
   "mitwpu.edu.in": "MIT World Peace University",
@@ -177,6 +225,36 @@ const EMAIL_TO_COLLEGE: Record<string, string> = {
   "mdi.ac.in": "MDI Gurgaon",
   "greatlakes.edu.in": "Great Lakes Institute of Management",
   "spjimr.org": "SPJIMR Mumbai",
+
+  // -------- Top State Colleges --------
+"coep.org.in": "COEP Pune",
+"vjti.ac.in": "VJTI Mumbai",
+"jadavpuruniversity.in": "Jadavpur University",
+"annauniv.edu": "Anna University",
+"osmania.ac.in": "Osmania University",
+"msrit.edu": "MS Ramaiah Institute of Technology",
+"rvce.edu.in": "RV College of Engineering",
+"pes.edu": "PES University",
+"bmsce.ac.in": "BMS College of Engineering",
+"krea.edu.in": "Krea University",
+
+// Engineering-focused / others (avoid duplicate domain keys above)
+"shivajicollege.ac.in": "Shivaji College",
+"jainuniversity.ac.in": "Jain University",
+
+"srmist.edu.in": "SRM Institute of Science and Technology (Kattankulathur, Ramapuram, Vadapalani, NCR)",
+"srmrmp.edu.in": "SRM IST Ramapuram Campus",
+"srmistvdp.edu.in": "SRM IST Vadapalani Campus",
+"srmup.in": "SRM IST Delhi-NCR (Modinagar)",
+"srmtrichy.edu.in": "SRM IST Tiruchirappalli (Trichy)",
+
+"srmap.edu.in": "SRM University AP (Amaravati)",
+"srmuniversity.ac.in": "SRM University Haryana (Sonepat)",
+"srmus.ac.in": "SRM University Sikkim (Gangtok)",
+
+"trp.srmtrichy.edu.in": "SRM TRP Engineering College (Trichy)"
+
+
 };
 
 const HOURLY_TIME_OPTIONS = Array.from({ length: 24 }, (_, hour) => {
@@ -185,6 +263,40 @@ const HOURLY_TIME_OPTIONS = Array.from({ length: 24 }, (_, hour) => {
   return `${hour12}:00 ${suffix}`;
 });
 const SESSION_PRICE_OPTIONS = ["100", "150", "200", "250", "300", "350", "400"] as const;
+
+type AdvisorSignupDraft = {
+  name: string;
+  gender: string;
+  collegeEmail: string;
+  detectedCollege: string;
+  branch: string;
+  phone: string;
+  upiId: string;
+  state: string;
+  dateOfBirth: string;
+  rollNumber: string;
+  studyYearAtSignup: string;
+  jeeMainsPercentile: string;
+  jeeMainsRank: string;
+  jeeAdvancedRank: string;
+  bio: string;
+  skills: string;
+  achievements: string;
+  languages: string[];
+  languageOther: string;
+  sessionPrice: string;
+  preferredTimezones: Array<{ from: string; to: string }>;
+  idFrontPreview: string | null;
+  idFrontFile: File | null;
+  idBackPreview: string | null;
+  idBackFile: File | null;
+  idUploadToken: string;
+  referralCode: string;
+  acceptedPolicies: boolean;
+  signupStep: 1 | 2;
+};
+
+let advisorSignupDraft: AdvisorSignupDraft | null = null;
 
 function plusOneHour(timeLabel: string): string {
   const idx = HOURLY_TIME_OPTIONS.indexOf(timeLabel);
@@ -214,8 +326,9 @@ export default function AdvisorSignupPage() {
   const [branch, setBranch] = useState("");
   const [phone, setPhone] = useState("");
   const [upiId, setUpiId] = useState("");
-  const [personalEmail, setPersonalEmail] = useState("");
   const [state, setState] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [rollNumber, setRollNumber] = useState("");
   const [studyYearAtSignup, setStudyYearAtSignup] = useState("");
   const [jeeMainsPercentile, setJeeMainsPercentile] = useState("");
   const [jeeMainsRank, setJeeMainsRank] = useState("");
@@ -225,9 +338,6 @@ export default function AdvisorSignupPage() {
   const [achievements, setAchievements] = useState("");
   const [languages, setLanguages] = useState<string[]>([]);
   const [languageOther, setLanguageOther] = useState("");
-  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
-  const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
-  const profilePicInputRef = useRef<HTMLInputElement>(null);
   const [sessionPrice, setSessionPrice] = useState("");
   const [preferredTimezones, setPreferredTimezones] = useState<
     Array<{ from: string; to: string }>
@@ -247,7 +357,10 @@ export default function AdvisorSignupPage() {
   const [idFrontFile, setIdFrontFile] = useState<File | null>(null);
   const [idBackPreview, setIdBackPreview] = useState<string | null>(null);
   const [idBackFile, setIdBackFile] = useState<File | null>(null);
+  const [idUploadToken, setIdUploadToken] = useState("");
+  const [uploadingIdToS3, setUploadingIdToS3] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [extractingIdDetails, setExtractingIdDetails] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [acceptedPolicies, setAcceptedPolicies] = useState(false);
   const [signupStep, setSignupStep] = useState<1 | 2>(1);
@@ -255,6 +368,40 @@ export default function AdvisorSignupPage() {
   useEffect(() => {
     const auth = getFirebaseAuth();
     return onAuthStateChanged(auth, setAuthUser);
+  }, []);
+
+  useEffect(() => {
+    if (!advisorSignupDraft) return;
+    const draft = advisorSignupDraft;
+    setName(draft.name);
+    setGender(draft.gender);
+    setCollegeEmail(draft.collegeEmail);
+    setDetectedCollege(draft.detectedCollege);
+    setBranch(draft.branch);
+    setPhone(draft.phone);
+    setUpiId(draft.upiId);
+    setState(draft.state);
+    setDateOfBirth(draft.dateOfBirth);
+    setRollNumber(draft.rollNumber);
+    setStudyYearAtSignup(draft.studyYearAtSignup);
+    setJeeMainsPercentile(draft.jeeMainsPercentile);
+    setJeeMainsRank(draft.jeeMainsRank);
+    setJeeAdvancedRank(draft.jeeAdvancedRank);
+    setBio(draft.bio);
+    setSkills(draft.skills);
+    setAchievements(draft.achievements);
+    setLanguages(draft.languages);
+    setLanguageOther(draft.languageOther);
+    setSessionPrice(draft.sessionPrice);
+    setPreferredTimezones(draft.preferredTimezones);
+    setIdFrontPreview(draft.idFrontPreview);
+    setIdFrontFile(draft.idFrontFile);
+    setIdBackPreview(draft.idBackPreview);
+    setIdBackFile(draft.idBackFile);
+    setIdUploadToken(draft.idUploadToken);
+    setReferralCode(draft.referralCode);
+    setAcceptedPolicies(draft.acceptedPolicies);
+    setSignupStep(draft.signupStep);
   }, []);
 
   // Keep local email in sync when a session exists (e.g. refresh).
@@ -266,6 +413,70 @@ export default function AdvisorSignupPage() {
   }, [authUser]);
 
   useEmailVerificationSync(authUser, setAuthUser, bump);
+
+  useEffect(() => {
+    advisorSignupDraft = {
+      name,
+      gender,
+      collegeEmail,
+      detectedCollege,
+      branch,
+      phone,
+      upiId,
+      state,
+      dateOfBirth,
+      rollNumber,
+      studyYearAtSignup,
+      jeeMainsPercentile,
+      jeeMainsRank,
+      jeeAdvancedRank,
+      bio,
+      skills,
+      achievements,
+      languages,
+      languageOther,
+      sessionPrice,
+      preferredTimezones,
+      idFrontPreview,
+      idFrontFile,
+      idBackPreview,
+      idBackFile,
+      idUploadToken,
+      referralCode,
+      acceptedPolicies,
+      signupStep,
+    };
+  }, [
+    name,
+    gender,
+    collegeEmail,
+    detectedCollege,
+    branch,
+    phone,
+    upiId,
+    state,
+    dateOfBirth,
+    rollNumber,
+    studyYearAtSignup,
+    jeeMainsPercentile,
+    jeeMainsRank,
+    jeeAdvancedRank,
+    bio,
+    skills,
+    achievements,
+    languages,
+    languageOther,
+    sessionPrice,
+    preferredTimezones,
+    idFrontPreview,
+    idFrontFile,
+    idBackPreview,
+    idBackFile,
+    idUploadToken,
+    referralCode,
+    acceptedPolicies,
+    signupStep,
+  ]);
 
   const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
     const next = e.target.value;
@@ -403,40 +614,87 @@ export default function AdvisorSignupPage() {
     }
     const objectUrl = URL.createObjectURL(file);
     if (side === "front") {
+      if (idFrontPreview?.startsWith("blob:")) URL.revokeObjectURL(idFrontPreview);
       setIdFrontPreview(objectUrl);
       setIdFrontFile(file);
+      setIdUploadToken("");
     } else {
+      if (idBackPreview?.startsWith("blob:")) URL.revokeObjectURL(idBackPreview);
       setIdBackPreview(objectUrl);
       setIdBackFile(file);
+      setIdUploadToken("");
     }
   };
 
-  const clearProfilePicture = () => {
-    if (profilePicPreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(profilePicPreview);
-    }
-    setProfilePicPreview(null);
-    setProfilePicFile(null);
-  };
+  useEffect(() => {
+    if (!idFrontFile || !idBackFile) return;
+    if (idUploadToken) return;
+    let cancelled = false;
 
-  const handleProfilePicUpload = (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      alert("Please upload an image file.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Profile image must be under 5MB.");
-      return;
-    }
-    if (profilePicPreview?.startsWith("blob:")) {
-      URL.revokeObjectURL(profilePicPreview);
-    }
-    setProfilePicPreview(URL.createObjectURL(file));
-    setProfilePicFile(file);
-  };
+    const runTempUpload = async () => {
+      setUploadingIdToS3(true);
+      try {
+        const uploaded = await uploadCollegeIdPairToS3Temp("advisor", idFrontFile, idBackFile);
+        if (!cancelled) setIdUploadToken(uploaded.tempUploadToken);
+      } catch {
+        if (!cancelled) {
+          alert("Could not pre-upload ID images yet. We will upload during final submit.");
+        }
+      } finally {
+        if (!cancelled) setUploadingIdToS3(false);
+      }
+    };
+
+    void runTempUpload();
+    return () => {
+      cancelled = true;
+    };
+  }, [idFrontFile, idBackFile, idUploadToken]);
+
+  useEffect(() => {
+    if (!idFrontFile || !idBackFile) return;
+    let cancelled = false;
+
+    const runExtraction = async () => {
+      setExtractingIdDetails(true);
+      try {
+        const extracted = await extractAdvisorFieldsFromIdCard(
+          idFrontFile,
+          idBackFile,
+          INDIAN_STATES,
+        );
+        if (cancelled) return;
+
+        if (extracted.fullName && !name.trim()) setName(extracted.fullName);
+        if (extracted.gender && !gender) setGender(extracted.gender);
+        if (extracted.collegeEmail && !collegeEmail.trim()) {
+          setCollegeEmail(extracted.collegeEmail);
+          setDetectedCollege(detectCollege(extracted.collegeEmail));
+        }
+        if (extracted.branch && !branch.trim()) setBranch(extracted.branch);
+        if (extracted.mobileNumber && !phone.trim()) setPhone(extracted.mobileNumber);
+        if (extracted.state && !state) setState(extracted.state);
+        if (extracted.dateOfBirth && !dateOfBirth.trim()) setDateOfBirth(extracted.dateOfBirth);
+        if (extracted.rollNumber && !rollNumber.trim()) setRollNumber(extracted.rollNumber);
+      } catch {
+        if (!cancelled) {
+          alert("Could not auto-extract all details from the ID. Please fill missing fields manually.");
+        }
+      } finally {
+        if (!cancelled) setExtractingIdDetails(false);
+      }
+    };
+
+    void runExtraction();
+    return () => {
+      cancelled = true;
+    };
+  }, [idFrontFile, idBackFile]);
 
   const handleNextStep = () => {
     if (
+      !idFrontFile ||
+      !idBackFile ||
       !name ||
       !gender ||
       !collegeEmail ||
@@ -541,16 +799,17 @@ export default function AdvisorSignupPage() {
         return;
       }
       const token = await after.getIdToken(true);
-      const { collegeIdFrontKey, collegeIdBackKey } = await uploadCollegeIdPairToS3(
-        token,
-        "advisor",
-        idFrontFile,
-        idBackFile,
-      );
-
-      let profilePictureKey: string | undefined;
-      if (profilePicFile) {
-        profilePictureKey = await uploadProfilePictureToS3(token, "advisor", profilePicFile);
+      let collegeIdFrontKey: string | undefined;
+      let collegeIdBackKey: string | undefined;
+      if (!idUploadToken) {
+        const uploaded = await uploadCollegeIdPairToS3(
+          token,
+          "advisor",
+          idFrontFile,
+          idBackFile,
+        );
+        collegeIdFrontKey = uploaded.collegeIdFrontKey;
+        collegeIdBackKey = uploaded.collegeIdBackKey;
       }
 
       const studyYear = Number.parseInt(studyYearAtSignup, 10);
@@ -565,6 +824,8 @@ export default function AdvisorSignupPage() {
         phone,
         upiId: upiId.trim(),
         state,
+        dateOfBirth,
+        rollNumber,
         jeeMainsPercentile,
         jeeMainsRank,
         bio,
@@ -573,25 +834,31 @@ export default function AdvisorSignupPage() {
         study_year_at_signup: studyYear,
         study_year_anchor_date: studyYearAnchorDate,
         collegeIdAcknowledged: true,
-        collegeIdFrontKey,
-        collegeIdBackKey,
         languages,
         preferredTimezones: selectedPreferredTimezones,
       };
+      if (idUploadToken) {
+        payload.idUploadToken = idUploadToken;
+      } else {
+        payload.collegeIdFrontKey = collegeIdFrontKey;
+        payload.collegeIdBackKey = collegeIdBackKey;
+      }
       const skillsValue = skills.trim();
       if (skillsValue) payload.skills = skillsValue;
-      const pe = personalEmail.trim();
-      if (pe) payload.personalEmail = pe;
+      const dob = dateOfBirth.trim();
+      if (dob) payload.dateOfBirth = dob;
+      const rn = rollNumber.trim();
+      if (rn) payload.rollNumber = rn;
       const ja = jeeAdvancedRank.trim();
       if (ja) payload.jeeAdvancedRank = ja;
       const ach = achievements.trim();
       if (ach) payload.achievements = ach;
       const lo = languageOther.trim();
       if (lo) payload.languageOther = lo;
-      if (profilePictureKey) payload.profilePicture = profilePictureKey;
       if (referralCode.trim()) payload.referralCode = referralCode.trim();
 
       const saved = await registerAdvisor(token, payload);
+      advisorSignupDraft = null;
       navigate({
         to: "/advisor/dashboard",
         state: { profileSavedId: saved.id } as Record<string, unknown>,
@@ -624,6 +891,49 @@ export default function AdvisorSignupPage() {
         </div>
 
         <div className={signupStep === 1 ? "flex flex-col gap-4" : "hidden"}>
+        <div className="border border-border/60 rounded-xl bg-background/20 p-3">
+          <p className="text-sm font-semibold text-foreground mb-1">
+            College ID Card Upload <span className="text-neon-orange">*</span>
+          </p>
+          <p className="text-xs text-muted-foreground mb-3">
+            Upload front and back first. We auto-fill details from your ID; you can edit everything.
+          </p>
+          <div className="flex gap-3">
+            <CollegeIdImageUploadBox
+              variant="orange"
+              label="Front Side"
+              preview={idFrontPreview}
+              onUpload={(file) => handleIdUpload("front", file)}
+              onRemove={() => {
+                if (idFrontPreview?.startsWith("blob:")) URL.revokeObjectURL(idFrontPreview);
+                setIdFrontPreview(null);
+                setIdFrontFile(null);
+                setIdUploadToken("");
+              }}
+            />
+            <CollegeIdImageUploadBox
+              variant="orange"
+              label="Back Side"
+              preview={idBackPreview}
+              onUpload={(file) => handleIdUpload("back", file)}
+              onRemove={() => {
+                if (idBackPreview?.startsWith("blob:")) URL.revokeObjectURL(idBackPreview);
+                setIdBackPreview(null);
+                setIdBackFile(null);
+                setIdUploadToken("");
+              }}
+            />
+          </div>
+          {extractingIdDetails ? (
+            <p className="text-xs text-neon-orange mt-2">Extracting details from ID card...</p>
+          ) : null}
+          {uploadingIdToS3 ? (
+            <p className="text-xs text-neon-orange mt-1">Securing ID upload...</p>
+          ) : idUploadToken ? (
+            <p className="text-xs text-green-500 mt-1">ID uploaded securely (temporary).</p>
+          ) : null}
+        </div>
+
         <div className="rounded-xl border border-border/60 bg-background/30 px-3 py-3 space-y-2">
           <label
             htmlFor="advisor-signup-referral"
@@ -657,42 +967,6 @@ export default function AdvisorSignupPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-neon-orange transition-colors"
-          />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label className="text-sm text-muted-foreground">
-            Profile picture <span className="text-xs">(optional)</span>
-          </label>
-          {profilePicPreview ? (
-            <div className="relative w-24 h-24 rounded-full overflow-hidden border border-neon-orange/40">
-              <img src={profilePicPreview} alt="Profile preview" className="w-full h-full object-cover" />
-              <button
-                type="button"
-                onClick={() => clearProfilePicture()}
-                className="absolute -top-1 -right-1 bg-black/70 rounded-full p-1 text-white"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => profilePicInputRef.current?.click()}
-              className="h-24 w-24 rounded-full border-2 border-dashed border-border hover:border-neon-orange text-muted-foreground hover:text-neon-orange flex items-center justify-center transition-colors"
-            >
-              <Upload size={18} />
-            </button>
-          )}
-          <input
-            ref={profilePicInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleProfilePicUpload(file);
-            }}
           />
         </div>
 
@@ -953,19 +1227,6 @@ export default function AdvisorSignupPage() {
 
         <div className="flex flex-col gap-1">
           <label className="text-sm text-muted-foreground">
-            Personal Email <span className="text-xs">(optional)</span>
-          </label>
-          <input
-            type="email"
-            placeholder="you@gmail.com"
-            value={personalEmail}
-            onChange={(e) => setPersonalEmail(e.target.value)}
-            className="bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-neon-orange transition-colors"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="text-sm text-muted-foreground">
             State <span className="text-neon-orange">⬢</span>
           </label>
           <select
@@ -1000,6 +1261,32 @@ export default function AdvisorSignupPage() {
         >
           Back to personal details
         </Button>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-muted-foreground">
+            Date of birth <span className="text-xs">(optional)</span>
+          </label>
+          <input
+            type="text"
+            placeholder="DD/MM/YYYY"
+            value={dateOfBirth}
+            onChange={(e) => setDateOfBirth(e.target.value)}
+            className="bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-neon-orange transition-colors"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm text-muted-foreground">
+            Roll number <span className="text-xs">(optional)</span>
+          </label>
+          <input
+            type="text"
+            placeholder="Your institute roll number"
+            value={rollNumber}
+            onChange={(e) => setRollNumber(e.target.value)}
+            className="bg-background border border-border rounded-xl px-4 py-2 text-sm text-foreground focus:outline-none focus:border-neon-orange transition-colors"
+          />
+        </div>
 
         <div className="flex flex-col gap-1">
           <label className="text-sm text-muted-foreground">
@@ -1058,42 +1345,6 @@ export default function AdvisorSignupPage() {
           <p className="text-xs text-muted-foreground">
             Not attempted or no rank yet? Leave empty  -  you can still create
             your account.
-          </p>
-        </div>
-
-        {/* College ID Upload */}
-        <div className="border-t border-border/50 pt-4 mt-2">
-          <p className="text-sm font-semibold text-foreground mb-1">
-            College ID Card <span className="text-neon-orange">*</span>
-          </p>
-          <p className="text-xs text-muted-foreground mb-4">
-            Upload both sides of your college ID for verification.
-          </p>
-          <div className="flex gap-3">
-            <CollegeIdImageUploadBox
-              variant="orange"
-              label="Front Side"
-              preview={idFrontPreview}
-              onUpload={(file) => handleIdUpload("front", file)}
-              onRemove={() => {
-                setIdFrontPreview(null);
-                setIdFrontFile(null);
-              }}
-            />
-            <CollegeIdImageUploadBox
-              variant="orange"
-              label="Back Side"
-              preview={idBackPreview}
-              onUpload={(file) => handleIdUpload("back", file)}
-              onRemove={() => {
-                setIdBackPreview(null);
-                setIdBackFile(null);
-              }}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Images are uploaded securely to cloud storage; we store references only, not raw
-            files in the database.
           </p>
         </div>
 
@@ -1288,15 +1539,15 @@ export default function AdvisorSignupPage() {
               />
               <span>
                 I accept the{" "}
-                <Link to="/terms" className="text-neon-orange hover:underline">
+                <Link to="/terms" target="_blank" rel="noreferrer" className="text-neon-orange hover:underline">
                   Terms
                 </Link>
                 {", "}
-                <Link to="/about" className="text-neon-orange hover:underline">
+                <Link to="/about" target="_blank" rel="noreferrer" className="text-neon-orange hover:underline">
                   About
                 </Link>
                 {" and "}
-                <Link to="/privacy" className="text-neon-orange hover:underline">
+                <Link to="/privacy" target="_blank" rel="noreferrer" className="text-neon-orange hover:underline">
                   Privacy Policy
                 </Link>
                 .
