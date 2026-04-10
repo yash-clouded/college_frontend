@@ -24,7 +24,7 @@ const CollegePredictorPage = lazy(() => import("./pages/home/CollegePredictorPag
 const StudentDashboard = lazy(() => import("./pages/dashboard/StudentDashboard"));
 const StudentAdvisorDetailPage = lazy(() => import("./pages/dashboard/StudentAdvisorDetailPage"));
 const StudentSessionDetailPage = lazy(() => import("./pages/dashboard/StudentSessionDetailPage"));
-const PendingApproval = lazy(() => import("./pages/PendingApproval"));
+
 const AdvisorDashboard = lazy(() => import("./pages/dashboard/AdvisorDashboard"));
 const AdvisorSessionDetailPage = lazy(() => import("./pages/dashboard/AdvisorSessionDetailPage"));
 
@@ -52,7 +52,7 @@ const collegePredictorRoute = createRoute({
   path: "/college-predictor",
   component: CollegePredictorPage,
 });
-const pendingRoute = createRoute({ getParentRoute: () => rootRoute, path: "/pending", component: PendingApproval });
+
 const studentDashboardRoute = createRoute({ getParentRoute: () => rootRoute, path: "/student/dashboard", component: StudentDashboard });
 const studentAdvisorDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -83,7 +83,6 @@ const routeTree = rootRoute.addChildren([
   termsRoute,
   getStartedRoute,
   collegePredictorRoute,
-  pendingRoute,
   studentDashboardRoute,
   studentAdvisorDetailRoute,
   studentSessionDetailRoute,

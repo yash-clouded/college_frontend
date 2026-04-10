@@ -81,13 +81,6 @@ export function getSeoForPath(pathname: string): RouteSeo {
   const path = pathname.split("?")[0] || "/";
   if (!path.startsWith("/")) return { ...PUBLIC["/"] };
 
-  if (path === "/pending") {
-    return {
-      title: `Pending Approval | ${SITE_NAME}`,
-      description: DEFAULT_DESCRIPTION,
-      noindex: true,
-    };
-  }
 
   if (path.startsWith("/student/dashboard")) {
     return {
