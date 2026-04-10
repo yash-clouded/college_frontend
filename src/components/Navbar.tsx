@@ -6,10 +6,11 @@ import { useEffect, useState } from "react";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { BrandLogo } from "@/components/BrandLogo";
 
-const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Why Us", href: "#why-us" },
+const navLinks: { label: string; href: string; isHash: boolean }[] = [
+  { label: "Home", href: "/", isHash: false },
+  { label: "How It Works", href: "#how-it-works", isHash: true },
+  { label: "Why Us", href: "#why-us", isHash: true },
+  { label: "College Predictor", href: "/college-predictor", isHash: false },
 ];
 
 export default function Navbar() {
@@ -70,17 +71,28 @@ export default function Navbar() {
         {/* Desktop Nav */}
         {showTopNav ? (
           <nav className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <button
-                type="button"
-                key={link.href}
-                onClick={() => handleNavClick(link.href)}
-                className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors duration-200 hover:text-glow-teal"
-                data-ocid="nav.link"
-              >
-                {link.label}
-              </button>
-            ))}
+            {navLinks.map((link) =>
+              link.isHash ? (
+                <button
+                  type="button"
+                  key={link.href}
+                  onClick={() => handleNavClick(link.href)}
+                  className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors duration-200 hover:text-glow-teal"
+                  data-ocid="nav.link"
+                >
+                  {link.label}
+                </button>
+              ) : (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors duration-200 hover:text-glow-teal"
+                  data-ocid="nav.link"
+                >
+                  {link.label}
+                </Link>
+              ),
+            )}
           </nav>
         ) : (
           <div className="hidden md:block" />
@@ -88,12 +100,18 @@ export default function Navbar() {
 
         {/* Get Started Button */}
         {showTopNav ? (
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-6">
             <Link
-              to="/get-started"
+              to="/auth/signup"
               className="inline-flex items-center justify-center bg-neon-orange hover:bg-neon-orange/80 hover:scale-105 text-black font-semibold rounded-xl px-5 py-2 text-sm glow-orange transition-all duration-300"
             >
-              Get Started
+              Sign Up
+            </Link>
+            <Link
+              to="/auth/signin"
+              className="text-sm font-medium text-foreground hover:text-neon-teal transition-colors"
+            >
+              Sign In
             </Link>
           </div>
         ) : null}
@@ -102,10 +120,10 @@ export default function Navbar() {
         {showTopNav ? (
           <div className="md:hidden flex items-center gap-2">
             <Link
-              to="/get-started"
+              to="/auth/signup"
               className="inline-flex items-center justify-center bg-neon-orange hover:bg-neon-orange/80 text-black font-semibold rounded-lg px-3 py-1.5 text-xs glow-orange transition-all duration-300"
             >
-              Get Started
+              Sign Up
             </Link>
             <button
               type="button"
@@ -131,23 +149,43 @@ export default function Navbar() {
             className="md:hidden glass-strong border-t border-border overflow-hidden"
           >
             <nav className="flex flex-col px-4 py-4 gap-3">
-              {navLinks.map((link) => (
-                <button
-                  type="button"
-                  key={link.href}
-                  onClick={() => handleNavClick(link.href)}
-                  className="text-left text-sm font-body text-muted-foreground hover:text-foreground transition-colors py-2"
-                  data-ocid="nav.link"
-                >
-                  {link.label}
-                </button>
-              ))}
+              {navLinks.map((link) =>
+                link.isHash ? (
+                  <button
+                    type="button"
+                    key={link.href}
+                    onClick={() => handleNavClick(link.href)}
+                    className="text-left text-sm font-body text-muted-foreground hover:text-foreground transition-colors py-2"
+                    data-ocid="nav.link"
+                  >
+                    {link.label}
+                  </button>
+                ) : (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="text-left text-sm font-body text-muted-foreground hover:text-foreground transition-colors py-2 block"
+                    data-ocid="nav.link"
+                  >
+                    {link.label}
+                  </Link>
+                ),
+              )}
               <Link
-                to="/get-started"
+                to="/auth/signup"
                 onClick={() => setMobileOpen(false)}
-                className="inline-flex items-center justify-center bg-neon-orange hover:bg-neon-orange/80 text-black font-semibold rounded-xl px-5 py-2.5 text-sm glow-orange transition-all duration-300 mt-2"
+                className="inline-flex items-center justify-center bg-neon-orange hover:bg-neon-orange/80 text-black font-semibold rounded-xl px-5 py-2.5 text-sm glow-orange transition-all duration-300 mt-4"
               >
-                Get Started
+                Sign Up
+              </Link>
+
+              <Link
+                to="/auth/signin"
+                onClick={() => setMobileOpen(false)}
+                className="text-center text-sm font-medium text-foreground py-2 mt-2"
+              >
+                Sign In
               </Link>
             </nav>
           </motion.div>

@@ -61,9 +61,7 @@ export type AdvisorProfileResponse = {
   branch: string;
   phone?: string;
   state?: string;
-  bio: string;
-  skills: string;
-  achievements?: string;
+  bio?: string;
   languages: string[];
   preferred_timezones?: string[];
   session_price: string;
@@ -74,6 +72,8 @@ export type AdvisorProfileResponse = {
   total_earnings?: number;
   total_sessions?: number;
   total_students?: number;
+  college_id_front_key?: string;
+  college_id_back_key?: string;
 };
 
 export type ReferralSummaryResponse = {
@@ -93,7 +93,7 @@ export type StudentProfileResponse = {
   id: string;
   name: string;
   email: string;
-  phone: string;
+  phone?: string;
   state: string;
   academic_status: string;
   jee_mains_percentile: string;
@@ -101,6 +101,8 @@ export type StudentProfileResponse = {
   jee_advanced_rank?: string;
   languages?: string[];
   language_other?: string;
+  total_spent?: number;
+  total_sessions?: number;
 };
 
 export type AdvisorDirectoryItem = {
@@ -113,8 +115,7 @@ export type AdvisorDirectoryItem = {
   study_year_at_signup?: number;
   study_year_anchor_date?: string;
   created_at?: string;
-  skills: string;
-  bio: string;
+  bio?: string;
   languages: string[];
   preferred_timezones?: string[];
 };
@@ -128,8 +129,6 @@ export type AdvisorPublicDetail = {
   branch?: string;
   state?: string;
   bio?: string;
-  skills?: string;
-  achievements?: string;
   languages?: string[];
   language_other?: string;
   session_price?: string;
@@ -214,7 +213,7 @@ export type BookingResponse = {
   end_time: string;
   selected_slot: string;
   session_price: string;
-  status: "pending" | "confirmed" | "cancelled" | "finalized";
+  status: "pending" | "confirmed" | "cancelled" | "finalized" | "changed";
   google_event_id?: string;
   meet_link?: string;
   student_joined: boolean;
@@ -514,31 +513,7 @@ export async function reportNoShowAction(
 
 // S3 & Referral functions added from upstream updates
 
-export async function uploadCollegeIdPairToS3(
-  firebaseIdToken: string,
-  role: "advisor" | "student",
-  frontFile: File,
-  backFile: File,
-): Promise<{ collegeIdFrontKey: string; collegeIdBackKey: string }> {
-  async function uploadSide(side: "front" | "back") {
-    const file = side === "front" ? frontFile : backFile;
-    const res = await fetch(url("/api/upload/college-id/presign"), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${firebaseIdToken}`,
-      },
-      body: JSON.stringify({ role, side, contentType: file.type }),
-    });
-    if (!res.ok) throw new Error(await parseErrorMessage(res));
-    const { uploadUrl, key } = await res.json();
-    const putRes = await fetch(uploadUrl, { method: "PUT", body: file });
-    if (!putRes.ok) throw new Error("Could not upload file to S3 storage.");
-    return key;
-  }
-  const [f, b] = await Promise.all([uploadSide("front"), uploadSide("back")]);
-  return { collegeIdFrontKey: f, collegeIdBackKey: b };
-}
+
 
 export async function uploadProfilePictureToS3(
   firebaseIdToken: string,
@@ -558,6 +533,48 @@ export async function uploadProfilePictureToS3(
   const putRes = await fetch(uploadUrl, { method: "PUT", body: file });
   if (!putRes.ok) throw new Error("Could not upload profile picture to S3 storage.");
   return key;
+}
+
+export async function uploadCollegeIdPairToS3(
+  firebaseIdToken: string,
+  front: File,
+  back: File,
+): Promise<{ frontKey: string; backKey: string }> {
+  try {
+    // 1. Get presigned URLs for both
+    const res = await fetch(url("/api/upload/college-id/presign-pair"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${firebaseIdToken}`,
+      },
+      body: JSON.stringify({
+        frontContentType: front.type,
+        backContentType: back.type,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(await parseErrorMessage(res));
+    }
+
+    const { frontUploadUrl, frontKey, backUploadUrl, backKey } = await res.json();
+
+    // 2. Upload to S3
+    const [frontRes, backRes] = await Promise.all([
+      fetch(frontUploadUrl, { method: "PUT", body: front }),
+      fetch(backUploadUrl, { method: "PUT", body: back }),
+    ]);
+
+    if (!frontRes.ok || !backRes.ok) {
+      throw new Error("Could not upload ID cards to S3 storage.");
+    }
+
+    return { frontKey, backKey };
+  } catch (err) {
+    console.error("uploadCollegeIdPairToS3 failed:", err);
+    throw err;
+  }
 }
 
 export async function getAdvisorReferralSummary(
@@ -651,4 +668,12 @@ export async function verifyPayment(
   });
   if (!res.ok) throw new Error(await parseErrorMessage(res));
   return await parseJsonOrThrow<PaymentVerificationResponse>(res);
+}
+
+export async function syncBookingStatus(firebaseIdToken: string, bookingId: string) {
+  const res = await fetch(url(`/api/payments/sync-status/${bookingId}`), {
+    method: "POST",
+    headers: { Authorization: `Bearer ${firebaseIdToken}` },
+  });
+  return await parseJsonOrThrow<{ ok: boolean; message?: string }>(res);
 }
