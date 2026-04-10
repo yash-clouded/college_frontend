@@ -12,6 +12,7 @@ import { ForgotPasswordOtpDialog } from "@/components/auth/ForgotPasswordOtpDial
 
 export default function SigninPage() {
   const navigate = useNavigate();
+  const [role, setRole] = useState<"student" | "advisor">("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -32,22 +33,19 @@ export default function SigninPage() {
       );
       const token = await userCred.user.getIdToken();
 
-      // 2. Auto-detect Role
+      // 2. Explicit Role Check
       try {
-        // Try Student first
-        await getMyStudentProfile(token);
-        navigate({ to: "/student/dashboard" });
-      } catch (studentErr) {
-        try {
-          // Try Advisor next
+        if (role === "student") {
+          await getMyStudentProfile(token);
+          navigate({ to: "/student/dashboard" });
+        } else {
           await getMyAdvisorProfile(token);
           navigate({ to: "/advisor/dashboard" });
-        } catch (advisorErr) {
-          // If both fail, might be a freshly created user who hasn't registered a profile yet
-          // (shouldn't happen with our signup flow, but good as fallback)
-          alert("Profile not found. Please sign up.");
-          await getFirebaseAuth().signOut();
         }
+      } catch (err) {
+        // If fetch fails, it means the user logged in but doesn't have the profile for the selected role
+        alert(`Profile not found. You don't have a ${role} account. Try switching roles or signing up.`);
+        await getFirebaseAuth().signOut();
       }
     } catch (e) {
       alert(formatFirebaseAuthError(e));
@@ -59,9 +57,32 @@ export default function SigninPage() {
   return (
     <AuthShell
       title="Welcome Back"
-      subtitle="Sign in to your account. We'll automatically find your dashboard."
+      subtitle="Sign in to your account. Please select your role below."
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
+        {/* Role Selection */}
+        <div className="flex p-1 bg-muted rounded-xl gap-1">
+          <button
+            onClick={() => setRole("student")}
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+              role === "student"
+                ? "bg-background shadow-sm text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            I'm a Student
+          </button>
+          <button
+            onClick={() => setRole("advisor")}
+            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+              role === "advisor"
+                ? "bg-background shadow-sm text-foreground"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            I'm an Advisor
+          </button>
+        </div>
         <div className="flex flex-col gap-1">
           <label className="text-sm text-muted-foreground">Email</label>
           <input
@@ -85,7 +106,11 @@ export default function SigninPage() {
           <Button
             onClick={handleLogin}
             disabled={busy}
-            className="flex-1 bg-neon-teal hover:bg-neon-teal/90 text-background font-semibold rounded-xl h-11 glow-teal transition-all duration-300"
+            className={`flex-1 font-semibold rounded-xl h-11 transition-all duration-300 ${
+              role === "student"
+                ? "bg-neon-teal hover:bg-neon-teal/90 text-background glow-teal"
+                : "bg-neon-orange hover:bg-neon-orange/90 text-black glow-orange"
+            }`}
           >
             {busy ? (
               <Loader size={18} className="animate-spin" />
@@ -109,10 +134,10 @@ export default function SigninPage() {
         <ForgotPasswordOtpDialog
           open={forgotOpen}
           onOpenChange={setForgotOpen}
-          role="student" // Default to student for reset
+          role={role}
           email={email}
           onEmailChange={setEmail}
-          accent="teal"
+          accent={role === "student" ? "teal" : "orange"}
           onResetSuccess={async (e, newPass) => {
             await signInWithEmailAndPassword(getFirebaseAuth(), e, newPass);
             // After reset, try login logic again
