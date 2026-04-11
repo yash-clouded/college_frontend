@@ -44,9 +44,14 @@ export default function SigninPage() {
           localStorage.setItem("user_role", "advisor");
           navigate({ to: "/advisor/dashboard" });
         }
-      } catch (err) {
-        // If fetch fails, it means the user logged in but doesn't have the profile for the selected role
-        alert(`Profile not found. You don't have a ${role} account. Try switching roles or signing up.`);
+      } catch (err: any) {
+        // Handle 403 Role Conflict specifically
+        if (err.status === 403 || (err.message && err.message.includes("403"))) {
+          const otherRole = role === "student" ? "Advisor" : "Student";
+          alert(`It looks like you have an ${otherRole} account. Please switch to "I'm an ${otherRole}" above.`);
+        } else {
+          alert(`Profile not found. You don't have a ${role} account. Try switching roles or signing up.`);
+        }
         await getFirebaseAuth().signOut();
       }
     } catch (e) {
