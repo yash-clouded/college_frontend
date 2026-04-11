@@ -43,13 +43,18 @@ export default function CollegePredictorPage() {
           transition={{ duration: 0.35 }}
           className="mb-8"
         >
-          <Link
-            to="/"
+          <button
+            onClick={() => {
+              const role = localStorage.getItem("user_role");
+              if (role === "student") window.location.href = "/student/dashboard";
+              else if (role === "advisor") window.location.href = "/advisor/dashboard";
+              else window.location.href = "/";
+            }}
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft size={16} aria-hidden />
-            Back to home
-          </Link>
+            Back to dashboard
+          </button>
         </motion.div>
 
         <motion.header

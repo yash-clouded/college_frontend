@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { BrandLogo } from "@/components/BrandLogo";
+import { ProfileDropdown } from "./ProfileDropdown";
 
 const navLinks: { label: string; href: string; isHash: boolean }[] = [
   { label: "Home", href: "/", isHash: false },
@@ -38,9 +39,11 @@ export default function Navbar() {
   const isPostSigninPage =
     location.pathname.startsWith("/student/dashboard") ||
     location.pathname.startsWith("/advisor/dashboard");
-  // We now show the Top Nav links even after sign-in, but handle layouts better
-  const showTopNavLinks = true;
-  const showAuthButtons = !isPostSigninPage || !authResolved || !authUser;
+
+  // We only show Top Nav links (Home, How It Works) if we're NOT on a dashboard
+  const showTopNavLinks = !isPostSigninPage;
+  const showAuthButtons = !authUser && !isPostSigninPage;
+  const userRole = (localStorage.getItem("user_role") as "student" | "advisor") || "student";
 
   const handleNavClick = (href: string) => {
     setMobileOpen(false);
@@ -102,47 +105,76 @@ export default function Navbar() {
               About
             </Link>
           </nav>
-        ) : null}
-
-        {/* Get Started Button */}
-        {showAuthButtons ? (
-          <div className="hidden md:flex items-center gap-6">
+        ) : (
+          <nav className="hidden md:flex items-center gap-6">
+            {/* On Dashboard, show Predictor and Analysis */}
             <Link
-              to="/auth/signup"
-              className="inline-flex items-center justify-center bg-neon-orange hover:bg-neon-orange/80 hover:scale-105 text-black font-semibold rounded-xl px-5 py-2 text-sm glow-orange transition-all duration-300"
+              to="/college-predictor"
+              className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors duration-200 hover:text-glow-teal"
             >
-              Sign Up
+              College Predictor
             </Link>
             <Link
-              to="/auth/signin"
-              className="text-sm font-medium text-foreground hover:text-neon-teal transition-colors"
+              to="/analysis"
+              className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors duration-200 hover:text-glow-teal"
             >
-              Sign In
+              Analysis Page
             </Link>
-          </div>
-        ) : null}
+          </nav>
+        )}
 
-        {showTopNavLinks ? (
-          <div className="md:hidden flex items-center gap-2">
-            {showAuthButtons && (
+        {/* Authenticated State vs Guest State */}
+        <div className="hidden md:flex items-center gap-6">
+          {authUser ? (
+            <ProfileDropdown 
+              role={userRole} 
+              userName={authUser.displayName || undefined} 
+              avatarUrl={authUser.photoURL || undefined}
+            />
+          ) : (
+            <>
               <Link
                 to="/auth/signup"
-                className="inline-flex items-center justify-center bg-neon-orange hover:bg-neon-orange/80 text-black font-semibold rounded-lg px-3 py-1.5 text-xs glow-orange transition-all duration-300"
+                className="inline-flex items-center justify-center bg-neon-orange hover:bg-neon-orange/80 hover:scale-105 text-black font-semibold rounded-xl px-5 py-2 text-sm glow-orange transition-all duration-300"
               >
                 Sign Up
               </Link>
-            )}
-            <button
-              type="button"
-              className="text-foreground p-2"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              data-ocid="nav.toggle"
-              aria-label="Toggle menu"
+              <Link
+                to="/auth/signin"
+                className="text-sm font-medium text-foreground hover:text-neon-teal transition-colors"
+              >
+                Sign In
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* Mobile menu toggle logic - similar cleanup */}
+        <div className="md:hidden flex items-center gap-4">
+          {!authUser && (
+            <Link
+              to="/auth/signup"
+              className="inline-flex items-center justify-center bg-neon-orange hover:bg-neon-orange/80 text-black font-semibold rounded-lg px-3 py-1.5 text-xs glow-orange transition-all duration-300"
             >
-              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
-          </div>
-        ) : null}
+              Sign Up
+            </Link>
+          )}
+          {authUser && (
+            <ProfileDropdown 
+              role={userRole} 
+              userName={authUser.displayName || undefined} 
+              avatarUrl={authUser.photoURL || undefined}
+            />
+          )}
+          <button
+            type="button"
+            className="text-foreground p-2"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
