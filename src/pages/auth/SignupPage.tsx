@@ -98,6 +98,8 @@ export default function SignupPage() {
     } catch (e) {
       if (e instanceof FirebaseError) {
         alert(formatFirebaseAuthError(e));
+      } else if (e.message && e.message.includes("409")) {
+        alert("This email is already registered. Please Sign In instead.");
       } else {
         alert(e instanceof Error ? e.message : "Signup failed.");
       }
@@ -110,8 +112,8 @@ export default function SignupPage() {
     <AuthShell
       title={step === 4 ? "Verify Email" : "Create Account"}
       subtitle={
-        step === 1 ? "Start with your name and referral code." :
-        step === 2 ? "Enter your email address." :
+        step === 1 ? (role === "advisor" ? "Sign up using college email only. Basic info first." : "Start with your name and referral code.") :
+        step === 2 ? (role === "advisor" ? "Enter your official college email address." : "Enter your email address.") :
         step === 3 ? "Secure your account with a password." :
         "Enter the 6-digit code sent to " + email
       }
@@ -132,7 +134,10 @@ export default function SignupPage() {
                 <input type="text" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} className="bg-background border border-border rounded-xl px-4 py-2 text-sm focus:border-neon-teal outline-none" />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-sm text-muted-foreground">Referral Code (Optional)</label>
+                <label className="text-sm text-muted-foreground flex justify-between">
+                  Referral Code (Optional)
+                  <span className="text-[10px] opacity-70 italic whitespace-nowrap ml-2">Can be filled later</span>
+                </label>
                 <input type="text" placeholder="REF123" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} className="bg-background border border-border rounded-xl px-4 py-2 text-sm focus:border-neon-teal outline-none" />
               </div>
               <Button onClick={() => name ? nextStep() : alert("Please enter your name")} className={`w-full font-semibold rounded-xl h-11 ${role === "student" ? "bg-neon-teal text-background" : "bg-neon-orange text-black"}`}>Next</Button>
@@ -144,8 +149,10 @@ export default function SignupPage() {
               <div className="flex flex-col gap-1">
                 <label className="text-sm text-muted-foreground">Email</label>
                 <input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-background border border-border rounded-xl px-4 py-2 text-sm focus:border-neon-teal outline-none" />
-                {role === "advisor" && email && isPersonalEmail(email) && (
-                  <p className="text-[10px] text-neon-orange font-medium animate-pulse mt-1">Please provide your College ID email.</p>
+                {role === "advisor" && (
+                  <p className={`text-[10px] font-medium mt-1 ${email && isPersonalEmail(email) ? "text-neon-orange animate-pulse" : "text-muted-foreground opacity-80"}`}>
+                    Important: Advisor accounts require a college ID email.
+                  </p>
                 )}
               </div>
               <div className="flex gap-3">
