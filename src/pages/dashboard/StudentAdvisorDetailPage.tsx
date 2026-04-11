@@ -273,7 +273,7 @@ export default function StudentAdvisorDetailPage() {
                 {row("JEE Mains rank", advisor.jee_mains_rank?.trim() || "")}
                 {row("JEE Advanced rank", advisor.jee_advanced_rank?.trim() || "")}
                 {row("Current year", studyYearLabel)}
-                {row("Session price", sessionPrice > 0 ? `��${sessionPrice}` : " - ")}
+                {row("Session price", sessionPrice > 0 ? `₹${sessionPrice}` : " - ")}
               </div>
 
               <div className="grid grid-cols-1 gap-3">

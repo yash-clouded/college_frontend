@@ -13,22 +13,33 @@ import { AuthShell } from "./AuthShell";
 export default function SignupPage() {
   const navigate = useNavigate();
   const [role, setRole] = useState<"student" | "advisor">("student");
+  const [step, setStep] = useState(1);
   const [name, setName] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [busy, setBusy] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+
+  const isPersonalEmail = (email: string) => {
+    const personalDomains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com", "me.com", "live.com", "msn.com"];
+    return personalDomains.some(domain => email.toLowerCase().endsWith(domain));
+  };
+
+  const nextStep = () => setStep(s => s + 1);
+  const prevStep = () => setStep(s => s - 1);
 
   const handleSendOtp = async () => {
-    if (!name || !email || !password) {
-      alert("Please fill in name, email, and password.");
+    if (role === "advisor" && isPersonalEmail(email)) {
+      alert("Please provide your College ID email (e.g., yourname@iit.ac.in) instead of a personal ID.");
       return;
     }
     setBusy(true);
     try {
       await requestSignupOtp(role, email.trim());
       setOtpSent(true);
+      setStep(4);
       alert("Verification code sent to your email.");
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed to send OTP.");
@@ -44,25 +55,26 @@ export default function SignupPage() {
     }
     setBusy(true);
     try {
-      // 1. Verify OTP and create Firebase user
       await verifySignupOtp(role, email.trim(), otp.trim(), password);
-      
-      // 2. Sign in to get token
       const auth = getFirebaseAuth();
       const userCred = await signInWithEmailAndPassword(auth, email.trim(), password);
       const user = userCred.user;
-      
-      // Update display name in Firebase
       await updateProfile(user, { displayName: name });
-      
       const token = await user.getIdToken();
 
-      // 3. Register minimal profile in our DB
+      const payload = { 
+        name, 
+        email: email.trim(),
+        referral_code: referralCode.trim() || undefined 
+      };
+
       if (role === "student") {
-        await registerStudent(token, { name, email: email.trim() });
+        await registerStudent(token, payload);
+        localStorage.setItem("user_role", "student");
         navigate({ to: "/student/dashboard" });
       } else {
-        await registerAdvisor(token, { name, email: email.trim() });
+        await registerAdvisor(token, payload);
+        localStorage.setItem("user_role", "advisor");
         navigate({ to: "/advisor/dashboard" });
       }
     } catch (e) {
@@ -78,107 +90,79 @@ export default function SignupPage() {
 
   return (
     <AuthShell
-      title="Create Account"
-      subtitle="Join Collegeconnects today. Simple and fast."
+      title={step === 4 ? "Verify Email" : "Create Account"}
+      subtitle={
+        step === 1 ? "Start with your name and referral code." :
+        step === 2 ? "Enter your email address." :
+        step === 3 ? "Secure your account with a password." :
+        "Enter the 6-digit code sent to " + email
+      }
     >
       <div className="flex flex-col gap-6">
-        {/* Role Selection */}
-        <div className="flex p-1 bg-muted rounded-xl gap-1">
-          <button
-            onClick={() => setRole("student")}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
-              role === "student"
-                ? "bg-background shadow-sm text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            I'm a Student
-          </button>
-          <button
-            onClick={() => setRole("advisor")}
-            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
-              role === "advisor"
-                ? "bg-background shadow-sm text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            I'm an Advisor
-          </button>
-        </div>
+        {step === 1 && (
+          <div className="flex p-1 bg-muted rounded-xl gap-1">
+            <button onClick={() => setRole("student")} className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${role === "student" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}>I'm a Student</button>
+            <button onClick={() => setRole("advisor")} className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${role === "advisor" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"}`}>I'm an Advisor</button>
+          </div>
+        )}
 
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm text-muted-foreground">Full Name</label>
-            <input
-              type="text"
-              placeholder="John Doe"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="bg-background border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-neon-teal transition-colors"
-            />
-          </div>
+          {step === 1 && (
+            <>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm text-muted-foreground">Full Name</label>
+                <input type="text" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} className="bg-background border border-border rounded-xl px-4 py-2 text-sm focus:border-neon-teal outline-none" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm text-muted-foreground">Referral Code (Optional)</label>
+                <input type="text" placeholder="REF123" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} className="bg-background border border-border rounded-xl px-4 py-2 text-sm focus:border-neon-teal outline-none" />
+              </div>
+              <Button onClick={() => name ? nextStep() : alert("Please enter your name")} className={`w-full font-semibold rounded-xl h-11 ${role === "student" ? "bg-neon-teal text-background" : "bg-neon-orange text-black"}`}>Next</Button>
+            </>
+          )}
 
-          <div className="flex flex-col gap-1">
-            <label className="text-sm text-muted-foreground">Email</label>
-            <input
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-background border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-neon-teal transition-colors"
-            />
-          </div>
+          {step === 2 && (
+            <>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm text-muted-foreground">Email</label>
+                <input type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-background border border-border rounded-xl px-4 py-2 text-sm focus:border-neon-teal outline-none" />
+                {role === "advisor" && email && isPersonalEmail(email) && (
+                  <p className="text-[10px] text-neon-orange font-medium animate-pulse mt-1">Please provide your College ID email.</p>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={prevStep} className="flex-1 rounded-xl">Back</Button>
+                <Button onClick={() => email ? nextStep() : alert("Please enter your email")} className={`flex-[2] font-semibold rounded-xl ${role === "student" ? "bg-neon-teal text-background" : "bg-neon-orange text-black"}`}>Next</Button>
+              </div>
+            </>
+          )}
 
-          <PasswordField
-            label="Password"
-            value={password}
-            onChange={setPassword}
-            variant={role === "student" ? "teal" : "orange"}
-          />
+          {step === 3 && (
+            <>
+              <PasswordField label="Password" value={password} onChange={setPassword} variant={role === "student" ? "teal" : "orange"} />
+              <div className="flex gap-3 mt-4">
+                <Button variant="outline" onClick={prevStep} className="flex-1 rounded-xl">Back</Button>
+                <Button onClick={handleSendOtp} disabled={busy} className={`flex-[2] font-semibold rounded-xl ${role === "student" ? "bg-neon-teal text-background" : "bg-neon-orange text-black"}`}>
+                  {busy ? <Loader size={18} className="animate-spin" /> : "Verify & Sign Up"}
+                </Button>
+              </div>
+            </>
+          )}
 
-          {otpSent && (
-            <div className="flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-300">
-              <label className="text-sm text-muted-foreground">Verification Code</label>
-              <input
-                type="text"
-                placeholder="6-digit code"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                className="bg-background border border-border rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-neon-teal transition-colors tracking-widest"
-              />
+          {step === 4 && (
+            <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm text-muted-foreground">Verification Code</label>
+                <input type="text" placeholder="6-digit code" value={otp} onChange={(e) => setOtp(e.target.value)} className="bg-background border border-border rounded-xl px-4 py-2 text-sm focus:border-neon-teal outline-none tracking-widest" />
+              </div>
+              <Button onClick={handleVerifyAndSignup} disabled={busy} className={`w-full font-semibold rounded-xl h-11 ${role === "student" ? "bg-neon-teal text-background" : "bg-neon-orange text-black"}`}>
+                {busy ? <Loader size={18} className="animate-spin" /> : <><CheckCircle size={18} className="mr-2" />Complete Signup</>}
+              </Button>
+              <button onClick={() => setStep(2)} className="text-xs text-muted-foreground hover:underline text-center">Entered wrong email? Change it here.</button>
             </div>
           )}
 
-          <Button
-            onClick={otpSent ? handleVerifyAndSignup : handleSendOtp}
-            disabled={busy}
-            className={`w-full font-semibold rounded-xl h-11 transition-all ${
-              role === "student"
-                ? "bg-neon-teal hover:bg-neon-teal/90 text-background glow-teal"
-                : "bg-neon-orange hover:bg-neon-orange/90 text-black glow-orange"
-            }`}
-          >
-            {busy ? (
-              <Loader size={18} className="animate-spin" />
-            ) : otpSent ? (
-              <>
-                <CheckCircle size={18} className="mr-2" />
-                Complete Signup
-              </>
-            ) : (
-              <>
-                <Mail size={18} className="mr-2" />
-                Get OTP
-              </>
-            )}
-          </Button>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link to="/auth/signin" className="text-foreground font-medium hover:underline">
-              Sign In
-            </Link>
-          </p>
+          <p className="text-center text-sm text-muted-foreground mt-2">Already have an account? <Link to="/auth/signin" className="text-foreground font-medium hover:underline">Sign In</Link></p>
         </div>
       </div>
     </AuthShell>

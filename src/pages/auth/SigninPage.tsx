@@ -37,9 +37,11 @@ export default function SigninPage() {
       try {
         if (role === "student") {
           await getMyStudentProfile(token);
+          localStorage.setItem("user_role", "student");
           navigate({ to: "/student/dashboard" });
         } else {
           await getMyAdvisorProfile(token);
+          localStorage.setItem("user_role", "advisor");
           navigate({ to: "/advisor/dashboard" });
         }
       } catch (err) {
