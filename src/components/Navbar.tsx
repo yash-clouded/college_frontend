@@ -120,6 +120,12 @@ export default function Navbar() {
             >
               Analysis Page
             </Link>
+            <Link
+              to="/about"
+              className="text-sm font-body text-muted-foreground hover:text-foreground transition-colors duration-200 hover:text-glow-teal"
+            >
+              About
+            </Link>
           </nav>
         )}
 
@@ -179,7 +185,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       <AnimatePresence>
-        {showTopNavLinks && mobileOpen && (
+        {mobileOpen && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
@@ -188,28 +194,47 @@ export default function Navbar() {
             className="md:hidden glass-strong border-t border-border overflow-hidden"
           >
             <nav className="flex flex-col px-4 py-4 gap-3">
-              {navLinks.map((link) =>
-                link.isHash ? (
-                  <button
-                    type="button"
-                    key={link.href}
-                    onClick={() => handleNavClick(link.href)}
-                    className="text-left text-sm font-body text-muted-foreground hover:text-foreground transition-colors py-2"
-                    data-ocid="nav.link"
-                  >
-                    {link.label}
-                  </button>
-                ) : (
+              {showTopNavLinks ? (
+                navLinks.map((link) =>
+                  link.isHash ? (
+                    <button
+                      type="button"
+                      key={link.href}
+                      onClick={() => handleNavClick(link.href)}
+                      className="text-left text-sm font-body text-muted-foreground hover:text-foreground transition-colors py-2"
+                      data-ocid="nav.link"
+                    >
+                      {link.label}
+                    </button>
+                  ) : (
+                    <Link
+                      key={link.href}
+                      to={link.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="text-left text-sm font-body text-muted-foreground hover:text-foreground transition-colors py-2 block"
+                      data-ocid="nav.link"
+                    >
+                      {link.label}
+                    </Link>
+                  ),
+                )
+              ) : (
+                <>
                   <Link
-                    key={link.href}
-                    to={link.href}
+                    to="/college-predictor"
                     onClick={() => setMobileOpen(false)}
                     className="text-left text-sm font-body text-muted-foreground hover:text-foreground transition-colors py-2 block"
-                    data-ocid="nav.link"
                   >
-                    {link.label}
+                    College Predictor
                   </Link>
-                ),
+                  <Link
+                    to="/analysis"
+                    onClick={() => setMobileOpen(false)}
+                    className="text-left text-sm font-body text-muted-foreground hover:text-foreground transition-colors py-2 block"
+                  >
+                    Analysis Page
+                  </Link>
+                </>
               )}
               {showAuthButtons ? (
                 <>
