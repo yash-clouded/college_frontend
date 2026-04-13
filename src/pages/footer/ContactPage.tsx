@@ -83,7 +83,7 @@ Reach out to our support team, and we'll assist you as quickly as possible.`;
   const creators = [
     { id: 1, src: "figures/1.jpeg", name: "Karri Kishan", position: "Founder & CEO" },
     { id: 2, src: "figures/2.jpeg", name: "Bhargav Venkat", position: "Co-Founder and Founding Engineer" },
-    { id: 3, src: "figures/3.jpeg", name: "Yashwanth Bhuduru", position: "CTO and Co-Founder" },
+    { id: 3, src: "figures/3.jpeg", name: "Yaswanth Buduru", position: "CTO and Co-Founder" },
     { id: 4, src: "figures/4.jpeg", name: "Sai Badrishwar S S", position: "CMO" },
     
     { id: 6, src: "figures/6.jpeg", name: "Mukunda Ramachary", position: "CIO" },
