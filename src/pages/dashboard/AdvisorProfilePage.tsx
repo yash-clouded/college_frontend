@@ -4,6 +4,7 @@ import {
   getMyAdvisorProfile,
   updateMyAdvisorProfile,
   uploadCollegeIdPairToS3,
+  uploadProfilePictureToS3,
   type AdvisorProfileResponse,
 } from "@/lib/restApi";
 import { computeEffectiveStudyYear, formatStudyYearLabel } from "@/lib/advisorStudyYear";
@@ -40,6 +41,8 @@ export default function AdvisorProfilePage() {
   
   const [frontFile, setFrontFile] = useState<File | null>(null);
   const [backFile, setBackFile] = useState<File | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   useEffect(() => {
     const auth = getFirebaseAuth();
@@ -96,6 +99,11 @@ export default function AdvisorProfilePage() {
         payload.college_id_back_key = backKey;
       }
 
+      if (avatarFile) {
+        const photoKey = await uploadProfilePictureToS3(token, "advisor", avatarFile);
+        payload.profile_picture = photoKey;
+      }
+
       const updated = await updateMyAdvisorProfile(token, payload);
       setAdvisor(updated);
       setIsEditing(false);
@@ -134,12 +142,24 @@ export default function AdvisorProfilePage() {
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-10 mb-12 border-b border-slate-100 pb-12">
             <div className="shrink-0 relative">
                <div className="w-40 h-40 rounded-[3rem] bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center border-4 border-white shadow-2xl relative overflow-hidden group">
-                 <span className="text-5xl font-display font-bold text-slate-800">
-                    {advisor?.name?.split(" ").map(n => n[0]).slice(0, 2).join("")}
-                 </span>
-                 <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                 {avatarPreview || advisor?.profile_picture ? (
+                   <img src={avatarPreview || `https://collegeconnects-profile-pics.s3.amazonaws.com/${advisor?.profile_picture}`} className="w-full h-full object-cover" />
+                 ) : (
+                   <span className="text-5xl font-display font-bold text-slate-800">
+                      {advisor?.name?.split(" ").map(n => n[0]).slice(0, 2).join("")}
+                   </span>
+                 )}
+                 <label className="absolute inset-0 bg-slate-900/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                     <Camera size={24} className="text-white" />
-                 </div>
+                    <input type="file" className="hidden" accept="image/*" onChange={e => {
+                      const f = e.target.files?.[0];
+                      if (f) {
+                        setAvatarFile(f);
+                        setAvatarPreview(URL.createObjectURL(f));
+                        setIsEditing(true);
+                      }
+                    }} />
+                 </label>
                </div>
                {advisor?.college_id_front_key && (
                  <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-2xl border-4 border-white shadow-lg">
