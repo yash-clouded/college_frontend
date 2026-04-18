@@ -231,15 +231,21 @@ export default function StudentDashboard() {
   const dynamicBranches = ["All Branches", ...new Set(advisors.map(a => a.branch).filter(Boolean).sort() as string[])];
 
   const filteredAdvisors = advisors.filter((a) => {
-    // MANDATORY VISIBILITY CHECK (50% Completion Rule)
-    // Must have Branch, ID Card, and JEE Rank
-    const isLive = !!a.branch && !!a.jee_mains_rank && !!a.college_id_front_key;
+    // DEBUG LOG - Remove after testing
+    // console.log("Checking advisor:", a.name, { branch: a.branch, rank: a.jee_mains_rank, id: a.college_id_front_key });
+    
+    // RELAXED CHECK for initial troubleshooting
+    const isLive = !!a.branch || !!a.jee_mains_rank || !!a.college_id_front_key;
     if (!isLive) return false;
 
-    const name = String(a.name ?? "");
-    const college = String(a.college ?? "");
-    const collegeMatch = selectedCollege === "All Colleges" || college === selectedCollege;
-    const branchMatch = selectedBranch === "All Branches" || String(a.branch ?? "") === selectedBranch;
+    const name = String(a.name ?? "").toLowerCase();
+    const college = String(a.college ?? a.detected_college ?? "").toLowerCase();
+    const query = searchQuery.toLowerCase();
+    
+    const collegeMatch = selectedCollege === "All Colleges" || college.includes(selectedCollege.toLowerCase());
+    const branchMatch = selectedBranch === "All Branches" || String(a.branch ?? "").includes(selectedBranch);
+    const searchMatch = query === "" || name.includes(query) || college.includes(query);
+    
     return collegeMatch && branchMatch && searchMatch;
   });
 
