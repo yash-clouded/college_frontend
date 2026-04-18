@@ -14,7 +14,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { User, IndianRupee, Star, TrendingUp, Users, Loader, CheckCircle, AlertTriangle, Upload, X, ShieldCheck, Mail, Phone, MapPin, GraduationCap, Clock, Camera, Target, Award, Languages, UserCircle, ChevronDown, Edit3 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
-const ADVISOR_PRICE_OPTIONS = ["99", "149", "199", "249", "299", "399", "499", "599", "999"];
+const ADVISOR_PRICE_OPTIONS = ["99", "149", "199", "250", "300", "350", "400"];
 
 export default function AdvisorProfilePage() {
   const navigate = useNavigate();
@@ -448,10 +448,7 @@ export default function AdvisorProfilePage() {
                           let isLocked = false;
                           let unlockRequirement = "";
                           
-                          if (numeric >= 999) { isLocked = totalSessions < 30; unlockRequirement = "30 sessions"; }
-                          else if (numeric >= 599) { isLocked = totalSessions < 20; unlockRequirement = "20 sessions"; }
-                          else if (numeric >= 499) { isLocked = totalSessions < 15; unlockRequirement = "15 sessions"; }
-                          else if (numeric >= 400) { isLocked = totalSessions < 10; unlockRequirement = "10 sessions"; }
+                          if (numeric >= 400) { isLocked = totalSessions < 10; unlockRequirement = "10 sessions"; }
                           else if (numeric >= 350) { isLocked = totalSessions < 8; unlockRequirement = "8 sessions"; }
                           else if (numeric >= 300) { isLocked = totalSessions < 5; unlockRequirement = "5 sessions"; }
                           else if (numeric >= 250) { isLocked = totalSessions < 2; unlockRequirement = "2 sessions"; }
