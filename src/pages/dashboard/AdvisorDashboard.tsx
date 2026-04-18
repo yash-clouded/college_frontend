@@ -280,7 +280,8 @@ export default function AdvisorDashboard() {
 
           {activeTab === "earnings" && (
             <motion.div key="earnings" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} className="space-y-8">
-               <div className="card-solid rounded-[2.5rem] p-10 bg-slate-900 text-white overflow-hidden relative border-none">
+               <div className="rounded-[2.5rem] p-10 bg-slate-900 text-white overflow-hidden relative border-none shadow-2xl shadow-slate-900/20">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-mango/10 rounded-full blur-[100px] -mr-32 -mt-32" />
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-12">
                       <div className="flex items-center gap-5">
