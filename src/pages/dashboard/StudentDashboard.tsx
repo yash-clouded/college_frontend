@@ -8,6 +8,7 @@ import {
   type StudentProfileResponse,
   type BookingResponse,
   syncBookingStatus,
+  forceConfirmBooking,
 } from "@/lib/restApi";
 import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
 import { useNavigate } from "@tanstack/react-router";
@@ -103,15 +104,25 @@ function BookingCardContent({ booking }: { booking: BookingResponse }) {
     setSyncing(true);
     try {
       const token = await u.getIdToken(true);
+      // First try the normal Razorpay sync
       const res = await syncBookingStatus(token, booking.id);
       if (res.ok) {
-        alert("Payment verified!");
-        window.location.reload(); 
+        alert("Payment verified! Refreshing...");
+        window.location.reload();
+      } else if (res.status === "no_order_linked") {
+        // Old booking with no Razorpay order ID — use force-confirm
+        const confirmed = await forceConfirmBooking(token, booking.id);
+        if (confirmed.ok) {
+          alert("Session confirmed! Refreshing...");
+          window.location.reload();
+        } else {
+          alert(confirmed.message || "Could not confirm. Please contact support.");
+        }
       } else {
-        alert(res.message || "Payment pending.");
+        alert(res.message || "Payment is still pending on Razorpay's end.");
       }
     } catch (err) {
-      alert("Sync failed.");
+      alert("Sync failed. Please try again.");
     } finally {
       setSyncing(false);
     }

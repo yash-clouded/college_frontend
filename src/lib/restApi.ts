@@ -688,5 +688,13 @@ export async function syncBookingStatus(firebaseIdToken: string, bookingId: stri
     method: "POST",
     headers: { Authorization: `Bearer ${firebaseIdToken}` },
   });
-  return await parseJsonOrThrow<{ ok: boolean; message?: string }>(res);
+  return await parseJsonOrThrow<{ ok: boolean; status?: string; message?: string }>(res);
+}
+
+export async function forceConfirmBooking(firebaseIdToken: string, bookingId: string) {
+  const res = await fetch(url(`/api/payments/force-confirm/${bookingId}`), {
+    method: "POST",
+    headers: { Authorization: `Bearer ${firebaseIdToken}` },
+  });
+  return await parseJsonOrThrow<{ ok: boolean; status?: string; message?: string }>(res);
 }
