@@ -37,6 +37,8 @@ export default function AdvisorProfilePage() {
     personal_email: "",
     gender: "",
     languages: "",
+    detected_college: "",
+    college_id_acknowledged: false,
   });
   
   const [frontFile, setFrontFile] = useState<File | null>(null);
@@ -75,6 +77,8 @@ export default function AdvisorProfilePage() {
         personal_email: prof.personal_email || "",
         gender: prof.gender || "",
         languages: prof.languages?.join(", ") || "",
+        detected_college: prof.detected_college || "",
+        college_id_acknowledged: !!prof.college_id_front_key, // Default to true if already uploaded
       });
     } catch (err) {
       console.error(err);
@@ -177,7 +181,20 @@ export default function AdvisorProfilePage() {
                  <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Expert Advisor Since 2024</span>
                </div>
                <h1 className="text-4xl font-display font-bold text-slate-900 mb-3 tracking-tight truncate">{advisor?.name}</h1>
-               <p className="text-lg font-medium text-slate-500 mb-4">{advisor?.detected_college} • <span className="text-slate-900">{advisor?.branch}</span></p>
+                <div className="flex items-center gap-2 text-lg font-medium text-slate-500 mb-4">
+                  {isEditing ? (
+                    <input 
+                      value={editForm.detected_college}
+                      onChange={e => setEditForm(p => ({...p, detected_college: e.target.value}))}
+                      placeholder="Enter College Name"
+                      className="bg-slate-50 border border-slate-100 rounded-lg px-2 py-1 text-slate-900 focus:outline-none"
+                    />
+                  ) : (
+                    <span>{advisor?.detected_college}</span>
+                  )}
+                  <span>•</span>
+                  <span className="text-slate-900">{advisor?.branch}</span>
+                </div>
                <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm font-bold text-slate-400 uppercase tracking-widest">
                   <span className="flex items-center gap-1.5"><Mail size={14} className="text-[#F5A623]" /> {authUser?.email?.split('@')[0]}</span>
                   <span className="flex items-center gap-1.5 font-display text-slate-700">{formatStudyYearLabel(effectiveYear)} Student</span>
@@ -358,34 +375,54 @@ export default function AdvisorProfilePage() {
             </h3>
             
             {!advisor?.college_id_front_key ? (
-              <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 sm:p-10 flex flex-col md:flex-row items-center gap-10 shadow-2xl relative overflow-hidden">
+              <div className="bg-slate-900 text-white rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#F5A623]/10 blur-[90px] rounded-full -mr-32 -mt-32" />
-                <div className="w-16 h-16 rounded-3xl bg-white/10 flex items-center justify-center shrink-0 border border-white/10">
-                  <Upload size={32} className="text-[#F5A623]" />
-                </div>
-                <div className="flex-1 text-center md:text-left relative z-10">
-                  <p className="text-2xl font-display font-bold mb-2">Verification Required</p>
-                  <p className="text-slate-400 font-medium leading-relaxed">
-                    To maintain trust, all advisors must upload their official college ID. This is not shared publicly.
-                  </p>
-                </div>
                 
-                {isEditing ? (
-                  <div className="flex gap-4 relative z-10">
-                    <label className="cursor-pointer bg-white/10 hover:bg-white/20 px-6 py-4 rounded-2xl border border-dashed border-white/20 transition-all flex flex-col items-center gap-1">
-                      <Camera size={20} className={frontFile ? "text-emerald-400" : "text-slate-300"} />
-                      <span className="text-[9px] font-bold uppercase tracking-wider">{frontFile ? "Front Ready" : "Front Side"}</span>
-                      <input type="file" className="hidden" onChange={e => setFrontFile(e.target.files?.[0] || null)} />
-                    </label>
-                    <label className="cursor-pointer bg-white/10 hover:bg-white/20 px-6 py-4 rounded-2xl border border-dashed border-white/20 transition-all flex flex-col items-center gap-1">
-                      <Camera size={20} className={backFile ? "text-emerald-400" : "text-slate-300"} />
-                      <span className="text-[9px] font-bold uppercase tracking-wider">{backFile ? "Back Ready" : "Back Side"}</span>
-                      <input type="file" className="hidden" onChange={e => setBackFile(e.target.files?.[0] || null)} />
+                <div className="flex flex-col md:flex-row items-center gap-10 relative z-10">
+                  <div className="w-16 h-16 rounded-3xl bg-white/10 flex items-center justify-center shrink-0 border border-white/10">
+                    <Upload size={32} className="text-[#F5A623]" />
+                  </div>
+                  <div className="flex-1 text-center md:text-left">
+                    <p className="text-2xl font-display font-bold mb-2">Institutional Verification</p>
+                    <p className="text-slate-400 font-medium leading-relaxed">
+                      All experts must provide their official ID card. We use this strictly for verification purposes to ensure the integrity of our advisory pool.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-8 pt-8 border-t border-white/5 space-y-6 relative z-10">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-3">
+                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">College ID (Front)</label>
+                       <label className={`cursor-pointer group h-32 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center gap-2 ${frontFile ? "bg-emerald-500/10 border-emerald-500/50" : "bg-white/5 border-white/10 hover:border-[#F5A623]/40"}`}>
+                          <Camera size={24} className={frontFile ? "text-emerald-400" : "text-slate-500 group-hover:text-[#F5A623]"} />
+                          <span className={`text-[10px] font-bold uppercase tracking-wider ${frontFile ? "text-emerald-400" : "text-slate-500"}`}>{frontFile ? "Ready for Upload" : "Select Image"}</span>
+                          <input type="file" className="hidden" accept="image/*" onChange={e => setFrontFile(e.target.files?.[0] || null)} />
+                       </label>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">College ID (Back)</label>
+                       <label className={`cursor-pointer group h-32 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center gap-2 ${backFile ? "bg-emerald-500/10 border-emerald-500/50" : "bg-white/5 border-white/10 hover:border-[#F5A623]/40"}`}>
+                          <Camera size={24} className={backFile ? "text-emerald-400" : "text-slate-500 group-hover:text-[#F5A623]"} />
+                          <span className={`text-[10px] font-bold uppercase tracking-wider ${backFile ? "text-emerald-400" : "text-slate-500"}`}>{backFile ? "Ready for Upload" : "Select Image"}</span>
+                          <input type="file" className="hidden" accept="image/*" onChange={e => setBackFile(e.target.files?.[0] || null)} />
+                       </label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 bg-white/5 p-4 rounded-xl border border-white/5">
+                    <input 
+                      type="checkbox" 
+                      id="id_ack"
+                      checked={editForm.college_id_acknowledged}
+                      onChange={e => setEditForm(p => ({...p, college_id_acknowledged: e.target.checked}))}
+                      className="mt-1 accent-[#F5A623]" 
+                    />
+                    <label htmlFor="id_ack" className="text-xs text-slate-400 leading-relaxed cursor-pointer select-none">
+                      I hereby confirm that I am a current student at <span className="text-white font-bold">{editForm.detected_college || "my detected college"}</span> and the documents provided are authentic and valid.
                     </label>
                   </div>
-                ) : (
-                    <button onClick={() => setIsEditing(true)} className="bg-[#F5A623] text-slate-900 px-8 py-4 rounded-2xl text-sm font-bold shadow-xl shadow-[#F5A623]/20 hover:scale-105 transition-transform">Complete Setup</button>
-                )}
+                </div>
               </div>
             ) : (
               <div className="bg-emerald-50 border-2 border-emerald-100 rounded-[2.5rem] p-10 flex items-center gap-8 shadow-sm">
