@@ -275,19 +275,20 @@ export default function AdvisorProfilePage() {
                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {[
                       { label: "JEE Mains Percentile", key: "jee_mains_percentile", type: "text", icon: Target },
-                      { label: "JEE Mains Rank", key: "jee_mains_rank", type: "text", icon: Award },
+                      { label: "JEE Mains Rank", key: "jee_mains_rank", type: "text", icon: Award, mandatory: true },
                       { label: "JEE Advanced Rank", key: "jee_advanced_rank", type: "text", icon: Star },
                     ].map(field => (
                       <div key={field.key} className="flex flex-col gap-2">
                         <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
                            <field.icon size={11} strokeWidth={2.5} />
                            {field.label}
+                           {field.mandatory && <span className="text-red-500 ml-0.5">*</span>}
                         </label>
                         {isEditing ? (
                           <input 
                             value={editForm[field.key as keyof typeof editForm] as string} 
                             onChange={e => setEditForm(p => ({...p, [field.key]: e.target.value}))}
-                            className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-medium focus:bg-white focus:border-[#F5A623]/30 outline-none transition-all"
+                            className={`bg-slate-50 border rounded-xl px-4 py-3 text-sm font-medium focus:bg-white focus:border-[#F5A623]/30 outline-none transition-all ${field.mandatory ? "border-slate-200" : "border-slate-100"}`}
                           />
                         ) : (
                           <div className="bg-white border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-700">
@@ -321,13 +322,13 @@ export default function AdvisorProfilePage() {
                   <div className="flex flex-col gap-2.5">
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
                        <GraduationCap size={12} strokeWidth={2.5} />
-                       Focus Branch
+                       Focus Branch <span className="text-red-500">*</span>
                     </label>
                     {isEditing ? (
                       <input 
                         value={editForm.branch} 
                         onChange={e => setEditForm(p => ({...p, branch: e.target.value}))}
-                        className="bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium focus:bg-white focus:border-slate-900/10 outline-none transition-all"
+                        className="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-medium focus:bg-white focus:border-slate-900/10 outline-none transition-all"
                       />
                     ) : (
                       <div className="bg-white border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700">
@@ -470,7 +471,9 @@ export default function AdvisorProfilePage() {
                 <div className="mt-8 pt-8 border-t border-white/5 space-y-6 relative z-10">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-3">
-                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">College ID (Front)</label>
+                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">
+                         College ID (Front) <span className="text-red-500">*</span>
+                       </label>
                        <label className={`cursor-pointer group h-32 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center gap-2 ${frontFile ? "bg-emerald-500/10 border-emerald-500/50" : "bg-white/5 border-white/10 hover:border-[#F5A623]/40"}`}>
                           <Camera size={24} className={frontFile ? "text-emerald-400" : "text-slate-500 group-hover:text-[#F5A623]"} />
                           <span className={`text-[10px] font-bold uppercase tracking-wider ${frontFile ? "text-emerald-400" : "text-slate-500"}`}>{frontFile ? "Ready for Upload" : "Select Image"}</span>
@@ -478,7 +481,9 @@ export default function AdvisorProfilePage() {
                        </label>
                     </div>
                     <div className="flex flex-col gap-3">
-                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">College ID (Back)</label>
+                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">
+                         College ID (Back) <span className="text-red-500">*</span>
+                       </label>
                        <label className={`cursor-pointer group h-32 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center gap-2 ${backFile ? "bg-emerald-500/10 border-emerald-500/50" : "bg-white/5 border-white/10 hover:border-[#F5A623]/40"}`}>
                           <Camera size={24} className={backFile ? "text-emerald-400" : "text-slate-500 group-hover:text-[#F5A623]"} />
                           <span className={`text-[10px] font-bold uppercase tracking-wider ${backFile ? "text-emerald-400" : "text-slate-500"}`}>{backFile ? "Ready for Upload" : "Select Image"}</span>
