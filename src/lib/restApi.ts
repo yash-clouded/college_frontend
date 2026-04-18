@@ -128,6 +128,8 @@ export type AdvisorDirectoryItem = {
   bio?: string;
   languages: string[];
   preferred_timezones?: string[];
+  jee_mains_rank?: string;
+  college_id_front_key?: string;
 };
 
 /** Public advisor profile from GET /api/advisors/id/{id} (Mongo fields, snake_case after normalize). */

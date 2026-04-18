@@ -10,7 +10,7 @@ import {
 import { computeEffectiveStudyYear, formatStudyYearLabel } from "@/lib/advisorStudyYear";
 import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth";
 import { useNavigate } from "@tanstack/react-router";
-import { User, IndianRupee, Star, TrendingUp, Users, Loader, CheckCircle, AlertTriangle, Upload, X, ShieldCheck, Mail, Phone, MapPin, GraduationCap, Clock, Camera, Target, Award, Languages, UserCircle, ChevronDown, Edit3, CreditCard, Calendar, Hash, Lightbulb, Trophy } from "lucide-react";
+import { User, IndianRupee, Star, TrendingUp, Users, Loader, CheckCircle, AlertTriangle, Upload, X, ShieldCheck, Mail, Phone, MapPin, GraduationCap, Clock, Camera, Target, Award, Languages, UserCircle, ChevronDown, Edit3 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 const ADVISOR_PRICE_OPTIONS = ["99", "149", "199", "249", "299", "399", "499", "599", "999"];
@@ -39,9 +39,6 @@ export default function AdvisorProfilePage() {
     languages: "",
     detected_college: "",
     college_id_acknowledged: false,
-    upi_id: "",
-    date_of_birth: "",
-    roll_number: "",
     skills: "",
     achievements: "",
   });
@@ -84,9 +81,6 @@ export default function AdvisorProfilePage() {
         languages: prof.languages?.join(", ") || "",
         detected_college: prof.detected_college || "",
         college_id_acknowledged: !!prof.college_id_front_key, 
-        upi_id: prof.upi_id || "",
-        date_of_birth: prof.date_of_birth || "",
-        roll_number: prof.roll_number || "",
         skills: prof.skills || "",
         achievements: prof.achievements || "",
       });
@@ -218,6 +212,25 @@ export default function AdvisorProfilePage() {
             )}
           </div>
 
+            {isEditing && (
+              <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-10 p-6 bg-blue-50 border border-blue-100 rounded-[2rem] flex items-start gap-4"
+              >
+                <div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shrink-0 shadow-sm border border-blue-100">
+                  <ShieldCheck className="text-blue-600" size={20} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 mb-1">Advisor Verification Policy</h4>
+                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                    To maintain platform integrity, your profile becomes visible to students ONLY once you complete:
+                    <span className="text-blue-700 font-bold ml-1">Branch, College ID, and JEE Mains Rank.</span>
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
             <div className="space-y-10">
               <div className="flex items-center gap-3">
                 <span className="w-1.5 h-6 bg-[#F5A623] rounded-full" />
@@ -226,16 +239,13 @@ export default function AdvisorProfilePage() {
               
               <div className="space-y-8">
                 <div className="space-y-5">
-                   <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest px-1">Identity & Financial</p>
+                   <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest px-1">Identity & Contact</p>
                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                      {[
                       { label: "Full Name", key: "name", type: "text", icon: User },
-                      { label: "Gender", key: "gender", keyLabel: "Gender", type: "text", icon: UserCircle },
-                      { label: "Date of Birth", key: "date_of_birth", type: "date", icon: Calendar },
-                      { label: "UPI ID For Payouts", key: "upi_id", type: "text", icon: CreditCard },
+                      { label: "Gender", key: "gender", type: "text", icon: UserCircle },
                       { label: "Personal Email", key: "personal_email", type: "email", icon: Mail },
                       { label: "Phone Number", key: "phone", type: "tel", icon: Phone },
-                      { label: "Roll Number", key: "roll_number", type: "text", icon: Hash },
                       { label: "Current State", key: "state", type: "text", icon: MapPin },
                     ].map(field => (
                       <div key={field.key} className="flex flex-col gap-2">
@@ -346,41 +356,42 @@ export default function AdvisorProfilePage() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
-                     <Lightbulb size={12} strokeWidth={2.5} />
-                     Key Skills
-                  </label>
-                  {isEditing ? (
-                    <input 
-                      value={editForm.skills} 
-                      onChange={e => setEditForm(p => ({...p, skills: e.target.value}))}
-                      placeholder="e.g. Data Structures, Physics Mentor, Career Counselor"
-                      className="bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium focus:bg-white focus:border-slate-900/10 outline-none transition-all"
-                    />
-                  ) : (
-                    <div className="bg-white border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700">
-                      {editForm.skills || "Add your skills to attract students..."}
-                    </div>
-                  )}
+                  <div className="flex flex-col gap-2.5">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
+                       <Award size={12} strokeWidth={2.5} />
+                       Key Skills (Optional)
+                    </label>
+                    {isEditing ? (
+                      <input 
+                        value={editForm.skills} 
+                        onChange={e => setEditForm(p => ({...p, skills: e.target.value}))}
+                        placeholder="e.g. Data Structures, Physics Mentor"
+                        className="bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium focus:bg-white focus:border-slate-900/10 outline-none transition-all"
+                      />
+                    ) : (
+                      <div className="bg-white border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700">
+                        {editForm.skills || "Not provided"}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-2.5">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-1 flex items-center gap-2">
-                     <Trophy size={12} strokeWidth={2.5} />
-                     Major Achievements
+                     <Star size={12} strokeWidth={2.5} />
+                     Major Achievements (Optional)
                   </label>
                   {isEditing ? (
                     <textarea 
                       value={editForm.achievements} 
                       onChange={e => setEditForm(p => ({...p, achievements: e.target.value}))}
-                      placeholder="Scholarships, hackathon wins, rank milestones..."
+                      placeholder="Scholarships, rank milestones..."
                       rows={2}
                       className="bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 text-sm font-medium focus:bg-white focus:border-slate-900/10 outline-none transition-all resize-none"
                     />
                   ) : (
                     <div className="bg-white border border-slate-100 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700">
-                      {editForm.achievements || "Share your journey with students..."}
+                      {editForm.achievements || "Not provided"}
                     </div>
                   )}
                 </div>
